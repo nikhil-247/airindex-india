@@ -98,7 +98,12 @@ class FareObservation(BaseModel):
     collection_run_id: UUID | None = None
 
     quality_status: QualityStatus = QualityStatus.PENDING
-    quality_score: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("100"), decimal_places=2)
+    quality_score: Decimal | None = Field(
+        default=None,
+        ge=Decimal("0"),
+        le=Decimal("100"),
+        decimal_places=2,
+    )
 
     @computed_field
     @property
