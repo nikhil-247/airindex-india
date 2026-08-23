@@ -7,11 +7,14 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from airindex.domain.models import FareObservation, QualityStatus, SourceType
 from airindex.db.repository import FareObservationRepository
+from airindex.domain.models import FareObservation, QualityStatus, SourceType
 
 
-DATABASE_URL = getenv("DATABASE_URL", "postgresql+asyncpg://airindex:airindex@localhost:5432/airindex")
+DATABASE_URL = getenv(
+    "DATABASE_URL",
+    "postgresql+asyncpg://airindex:airindex@localhost:5432/airindex",
+)
 UTC = timezone.utc
 
 
@@ -39,10 +42,12 @@ async def test_migration_and_repository_round_trip() -> None:
             await connection.execute(text("SELECT 1"))
             source_id = uuid4()
             await connection.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO sources (id, code, name, source_type, policy_version)
                     VALUES (:id, :code, :name, :source_type, :policy_version)
-                """),
+                    """
+                ),
                 {
                     "id": source_id,
                     "code": f"test-{source_id.hex[:8]}",
@@ -52,16 +57,30 @@ async def test_migration_and_repository_round_trip() -> None:
                 },
             )
             await connection.execute(
-                text("INSERT INTO airports (iata_code, name, city) VALUES ('DEL', 'Delhi', 'Delhi'), ('BOM', 'Mumbai', 'Mumbai') ON CONFLICT DO NOTHING")
+                text(
+                    """
+                    INSERT INTO airports (iata_code, name, city)
+                    VALUES ('DEL', 'Delhi', 'Delhi'), ('BOM', 'Mumbai', 'Mumbai')
+                    ON CONFLICT DO NOTHING
+                    """
+                )
             )
             await connection.execute(
-                text("INSERT INTO airlines (iata_code, name) VALUES ('6E', 'IndiGo') ON CONFLICT DO NOTHING")
+                text(
+                    """
+                    INSERT INTO airlines (iata_code, name)
+                    VALUES ('6E', 'IndiGo')
+                    ON CONFLICT DO NOTHING
+                    """
+                )
             )
         async with engine.begin() as connection:
             repository = FareObservationRepository(connection)
             observation = make_observation()
             await repository.add(observation, source_id)
-            count = await repository.count_for_route("DEL", "BOM", date(2026, 9, 7))
+            count = await repository.count_for_route(
+                "DEL", "BOM", date(2026, 9, 7)
+            )
             assert count >= 1
     finally:
         await engine.dispose()
