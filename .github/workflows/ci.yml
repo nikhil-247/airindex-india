@@ -9,6 +9,21 @@ on:
 jobs:
   python:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: airindex
+          POSTGRES_USER: airindex
+          POSTGRES_PASSWORD: airindex
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U airindex -d airindex"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://airindex:airindex@localhost:5432/airindex
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,6 +39,9 @@ jobs:
 
       - name: Lint
         run: ruff check .
+
+      - name: Migrate database
+        run: alembic upgrade head
 
       - name: Tests
         run: pytest
