@@ -1,0 +1,41 @@
+{
+  "methodology_version": "0.1.0",
+  "index_name": "AirIndex India Experimental Airfare Index",
+  "base_reference": {
+    "type": "configurable",
+    "default_index_level": 100.0
+  },
+  "advance_purchase_windows_days": [1, 7, 15, 30, 45],
+  "currency": "INR",
+  "fare_definition": {
+    "preferred_measure": "total_mandatory_payable_fare",
+    "include_base_fare": true,
+    "include_taxes": true,
+    "include_user_development_fee": true,
+    "include_mandatory_convenience_fee": true,
+    "include_optional_addons": false
+  },
+  "elementary_index": {
+    "method": "jevons",
+    "minimum_observations": 3
+  },
+  "route_aggregation": {
+    "method": "weighted_arithmetic_mean",
+    "weights_sum_to": 1.0
+  },
+  "missing_data": {
+    "cell_status": "insufficient_coverage",
+    "imputation": "disabled_for_v0.1.0"
+  },
+  "outlier_policy": {
+    "detection": ["mad", "iqr"],
+    "automatic_exclusion": false,
+    "retain_raw_observation": true
+  },
+  "publication": {
+    "daily": true,
+    "weekly": true,
+    "monthly": true,
+    "status_values": ["provisional", "revised", "finalized"]
+  }
+}

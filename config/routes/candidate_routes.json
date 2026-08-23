@@ -1,0 +1,16 @@
+{
+  "basket_version": "candidate-0.1",
+  "status": "research_candidates_not_final_weights",
+  "advance_purchase_windows_days": [1, 7, 15, 30, 45],
+  "routes": [
+    {"origin": "DEL", "destination": "BOM", "reason": "problem_statement_example"},
+    {"origin": "DEL", "destination": "BLR", "reason": "problem_statement_example"},
+    {"origin": "BOM", "destination": "BLR", "reason": "problem_statement_example"},
+    {"origin": "DEL", "destination": "CCU", "reason": "problem_statement_example"},
+    {"origin": "BLR", "destination": "HYD", "reason": "problem_statement_example"},
+    {"origin": "MAA", "destination": "DEL", "reason": "problem_statement_example"},
+    {"origin": "DEL", "destination": "HYD", "reason": "initial_research_candidate"},
+    {"origin": "BOM", "destination": "DEL", "reason": "initial_research_candidate"}
+  ],
+  "selection_note": "These routes are deliberately not assigned official statistical weights yet. The route basket engine will score candidates using authoritative traffic evidence, persistence, source coverage and geographic representation."
+}
