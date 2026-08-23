@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+.next/
+dist/
+coverage/
+
+# Data artifacts
+*.parquet
+*.csv
+*.jsonl
+*.sqlite
+*.db
+/data/raw/
+/data/processed/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Logs
+*.log
+logs/
