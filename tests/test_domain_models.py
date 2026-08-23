@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -13,11 +13,8 @@ from airindex.domain.models import (
 )
 
 
-UTC = timezone.utc
-
-
 def make_observation(**overrides: object) -> FareObservation:
-    values: dict[str, object] = {
+    values = {
         "source_name": "Example Airline",
         "source_type": SourceType.AIRLINE,
         "collected_at": datetime(2026, 8, 23, 10, 0, tzinfo=UTC),
@@ -38,7 +35,6 @@ def make_observation(**overrides: object) -> FareObservation:
 
 def test_total_fare_and_advance_days_are_derived() -> None:
     observation = make_observation()
-
     assert observation.total_fare == Decimal("4969.00")
     assert observation.advance_days == 15
 
@@ -50,7 +46,6 @@ def test_search_request_uses_requested_date_for_advance_window() -> None:
         travel_date=date(2026, 8, 30),
         requested_at=datetime(2026, 8, 23, 10, 0, tzinfo=UTC),
     )
-
     assert request.advance_days == 7
 
 
@@ -79,6 +74,5 @@ def test_sold_out_observation_cannot_have_positive_fare() -> None:
 
 def test_model_is_immutable() -> None:
     observation = make_observation()
-
     with pytest.raises(ValidationError):
         observation.base_fare = Decimal("1.00")
