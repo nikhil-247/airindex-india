@@ -45,15 +45,57 @@ class FareObservationRepository:
             text(
                 """
                 INSERT INTO fare_observations (
-                    id, source_id, collection_run_id, collected_at, origin, destination, travel_date,
-                    carrier_code, flight_number, fare_class, fare_family, departure_time, arrival_time,
-                    stops, base_fare, taxes, user_development_fee, convenience_fee, other_fees, currency,
-                    availability, scraper_version, source_url, quality_status, quality_score
+                    id,
+                    source_id,
+                    collection_run_id,
+                    collected_at,
+                    origin,
+                    destination,
+                    travel_date,
+                    carrier_code,
+                    flight_number,
+                    fare_class,
+                    fare_family,
+                    departure_time,
+                    arrival_time,
+                    stops,
+                    base_fare,
+                    taxes,
+                    user_development_fee,
+                    convenience_fee,
+                    other_fees,
+                    currency,
+                    availability,
+                    scraper_version,
+                    source_url,
+                    quality_status,
+                    quality_score
                 ) VALUES (
-                    :id, :source_id, :collection_run_id, :collected_at, :origin, :destination, :travel_date,
-                    :carrier_code, :flight_number, :fare_class, :fare_family, :departure_time, :arrival_time,
-                    :stops, :base_fare, :taxes, :user_development_fee, :convenience_fee, :other_fees, :currency,
-                    :availability, :scraper_version, :source_url, :quality_status, :quality_score
+                    :id,
+                    :source_id,
+                    :collection_run_id,
+                    :collected_at,
+                    :origin,
+                    :destination,
+                    :travel_date,
+                    :carrier_code,
+                    :flight_number,
+                    :fare_class,
+                    :fare_family,
+                    :departure_time,
+                    :arrival_time,
+                    :stops,
+                    :base_fare,
+                    :taxes,
+                    :user_development_fee,
+                    :convenience_fee,
+                    :other_fees,
+                    :currency,
+                    :availability,
+                    :scraper_version,
+                    :source_url,
+                    :quality_status,
+                    :quality_score
                 )
                 """
             ),
@@ -61,12 +103,20 @@ class FareObservationRepository:
         )
         return observation.observation_id
 
-    async def count_for_route(self, origin: str, destination: str, travel_date: date) -> int:
+    async def count_for_route(
+        self,
+        origin: str,
+        destination: str,
+        travel_date: date,
+    ) -> int:
         result = await self.session.execute(
             text(
                 """
-                SELECT COUNT(*) FROM fare_observations
-                WHERE origin = :origin AND destination = :destination AND travel_date = :travel_date
+                SELECT COUNT(*)
+                FROM fare_observations
+                WHERE origin = :origin
+                  AND destination = :destination
+                  AND travel_date = :travel_date
                 """
             ),
             {"origin": origin, "destination": destination, "travel_date": travel_date},
