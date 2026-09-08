@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Create the canonical AirIndex relational schema."""
 
 from alembic import op
