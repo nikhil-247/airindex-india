@@ -4,10 +4,11 @@ from os import getenv
 from uuid import uuid4
 
 import pytest
-from airindex.db.repository import FareObservationRepository
-from airindex.domain.models import FareObservation, QualityStatus, SourceType
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
+
+from airindex.db.repository import FareObservationRepository
+from airindex.domain.models import FareObservation, QualityStatus, SourceType
 
 DATABASE_URL = getenv(
     "DATABASE_URL",
