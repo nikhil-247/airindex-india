@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 from datetime import date
 from uuid import UUID
 
