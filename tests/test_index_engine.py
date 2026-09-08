@@ -1,4 +1,5 @@
 from decimal import Decimal
+from math import isclose
 
 import pytest
 
@@ -23,9 +24,9 @@ def test_jevons_index_matches_geometric_mean_of_price_relatives() -> None:
         },
     )
 
+    expected = 100.0 * (1.10 * 0.90 * 1.10) ** (1.0 / 3.0)
     assert result.observation_count == 3
-    expected = Decimal("100.0") * Decimal("(110/100 * 180/200 * 440/400)^(1/3)")
-    assert result.value == pytest.approx(expected, abs=Decimal("0.000001"))
+    assert isclose(float(result.value), expected, abs_tol=0.000001)
 
 
 def test_jevons_ignores_unmatched_observations_but_requires_minimum() -> None:
