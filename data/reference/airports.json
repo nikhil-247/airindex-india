@@ -1,0 +1,20 @@
+[
+  {
+    "iata_code": "DEL",
+    "name": "Indira Gandhi International Airport",
+    "city": "Delhi",
+    "state": "Delhi",
+    "country_code": "IN",
+    "latitude": 28.5562,
+    "longitude": 77.1000
+  },
+  {
+    "iata_code": "BOM",
+    "name": "Chhatrapati Shivaji Maharaj International Airport",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "country_code": "IN",
+    "latitude": 19.0896,
+    "longitude": 72.8656
+  }
+]
