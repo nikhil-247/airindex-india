@@ -4,12 +4,10 @@ from os import getenv
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine
-
 from airindex.db.repository import FareObservationRepository
 from airindex.domain.models import FareObservation, QualityStatus, SourceType
-
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine
 
 DATABASE_URL = getenv(
     "DATABASE_URL",
@@ -66,7 +64,7 @@ async def test_migration_and_repository_round_trip() -> None:
                         ('BOM', 'Mumbai', 'Mumbai')
                     ON CONFLICT DO NOTHING
                     """
-                )
+                ),
             )
             await connection.execute(
                 text(
@@ -75,7 +73,7 @@ async def test_migration_and_repository_round_trip() -> None:
                     VALUES ('6E', 'IndiGo')
                     ON CONFLICT DO NOTHING
                     """
-                )
+                ),
             )
         async with engine.begin() as connection:
             repository = FareObservationRepository(connection)
