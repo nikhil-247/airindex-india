@@ -4,6 +4,7 @@ from typing import Any
 
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
+
 from airindex.config import get_settings
 from alembic import context
 
