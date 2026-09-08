@@ -24,7 +24,11 @@ def upgrade() -> None:
             active BOOLEAN NOT NULL DEFAULT TRUE,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );
+        )
+        """
+    )
+    op.execute(
+        """
         CREATE TABLE airports (
             iata_code CHAR(3) PRIMARY KEY,
             name VARCHAR(160) NOT NULL,
@@ -34,12 +38,20 @@ def upgrade() -> None:
             latitude NUMERIC(9, 6),
             longitude NUMERIC(9, 6),
             active BOOLEAN NOT NULL DEFAULT TRUE
-        );
+        )
+        """
+    )
+    op.execute(
+        """
         CREATE TABLE airlines (
             iata_code VARCHAR(3) PRIMARY KEY,
             name VARCHAR(120) NOT NULL,
             active BOOLEAN NOT NULL DEFAULT TRUE
-        );
+        )
+        """
+    )
+    op.execute(
+        """
         CREATE TABLE routes (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             origin CHAR(3) NOT NULL REFERENCES airports(iata_code),
@@ -49,7 +61,11 @@ def upgrade() -> None:
             ) STORED UNIQUE,
             active BOOLEAN NOT NULL DEFAULT TRUE,
             CHECK (origin <> destination)
-        );
+        )
+        """
+    )
+    op.execute(
+        """
         CREATE TABLE route_baskets (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             version VARCHAR(40) NOT NULL UNIQUE,
@@ -58,7 +74,11 @@ def upgrade() -> None:
             effective_to DATE,
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             CHECK (effective_to IS NULL OR effective_to >= effective_from)
-        );
+        )
+        """
+    )
+    op.execute(
+        """
         CREATE TABLE route_basket_members (
             basket_id UUID NOT NULL REFERENCES route_baskets(id) ON DELETE CASCADE,
             route_id UUID NOT NULL REFERENCES routes(id),
@@ -66,7 +86,11 @@ def upgrade() -> None:
             selection_score NUMERIC(12, 8),
             selection_basis JSONB NOT NULL DEFAULT '{}'::jsonb,
             PRIMARY KEY (basket_id, route_id)
-        );
+        )
+        """
+    )
+    op.execute(
+        """
         CREATE TABLE collection_runs (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             source_id UUID NOT NULL REFERENCES sources(id),
@@ -79,7 +103,11 @@ def upgrade() -> None:
             observation_count INTEGER NOT NULL DEFAULT 0,
             error_count INTEGER NOT NULL DEFAULT 0,
             metadata JSONB NOT NULL DEFAULT '{}'::jsonb
-        );
+        )
+        """
+    )
+    op.execute(
+        """
         CREATE TABLE fare_observations (
             id UUID PRIMARY KEY,
             source_id UUID NOT NULL REFERENCES sources(id),
@@ -125,13 +153,23 @@ def upgrade() -> None:
                     AND other_fees = 0
                 )
             )
-        );
-        CREATE INDEX idx_fare_observations_route_date
-            ON fare_observations(origin, destination, travel_date, collected_at);
-        CREATE INDEX idx_fare_observations_source_collected
-            ON fare_observations(source_id, collected_at);
-        CREATE INDEX idx_fare_observations_quality
-            ON fare_observations(quality_status, collected_at);
+        )
+        """
+    )
+    op.execute(
+        "CREATE INDEX idx_fare_observations_route_date "
+        "ON fare_observations(origin, destination, travel_date, collected_at)"
+    )
+    op.execute(
+        "CREATE INDEX idx_fare_observations_source_collected "
+        "ON fare_observations(source_id, collected_at)"
+    )
+    op.execute(
+        "CREATE INDEX idx_fare_observations_quality "
+        "ON fare_observations(quality_status, collected_at)"
+    )
+    op.execute(
+        """
         CREATE TABLE index_runs (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             methodology_version VARCHAR(40) NOT NULL,
@@ -152,7 +190,7 @@ def upgrade() -> None:
                 coverage_ratio IS NULL
                 OR (coverage_ratio >= 0 AND coverage_ratio <= 1)
             )
-        );
+        )
         """
     )
 
