@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from os import getenv
 from uuid import uuid4
@@ -15,7 +15,6 @@ DATABASE_URL = getenv(
     "DATABASE_URL",
     "postgresql+asyncpg://airindex:airindex@localhost:5432/airindex",
 )
-UTC = timezone.utc
 
 
 def make_observation() -> FareObservation:
@@ -44,7 +43,9 @@ async def test_migration_and_repository_round_trip() -> None:
             await connection.execute(
                 text(
                     """
-                    INSERT INTO sources (id, code, name, source_type, policy_version)
+                    INSERT INTO sources (
+                        id, code, name, source_type, policy_version
+                    )
                     VALUES (:id, :code, :name, :source_type, :policy_version)
                     """
                 ),
@@ -60,7 +61,9 @@ async def test_migration_and_repository_round_trip() -> None:
                 text(
                     """
                     INSERT INTO airports (iata_code, name, city)
-                    VALUES ('DEL', 'Delhi', 'Delhi'), ('BOM', 'Mumbai', 'Mumbai')
+                    VALUES
+                        ('DEL', 'Delhi', 'Delhi'),
+                        ('BOM', 'Mumbai', 'Mumbai')
                     ON CONFLICT DO NOTHING
                     """
                 )
@@ -79,7 +82,9 @@ async def test_migration_and_repository_round_trip() -> None:
             observation = make_observation()
             await repository.add(observation, source_id)
             count = await repository.count_for_route(
-                "DEL", "BOM", date(2026, 9, 7)
+                "DEL",
+                "BOM",
+                date(2026, 9, 7),
             )
             assert count >= 1
     finally:
