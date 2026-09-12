@@ -1,0 +1,18 @@
+{
+  "source": "airindex-demo-replay",
+  "currency": "INR",
+  "observations": [
+    {"route":"DEL-BOM","carrier_code":"6E","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-09-13","total_fare":5200,"currency":"INR"},
+    {"route":"DEL-BOM","carrier_code":"AI","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-09-19","total_fare":5750,"currency":"INR"},
+    {"route":"DEL-BOM","carrier_code":"UK","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-09-27","total_fare":6350,"currency":"INR"},
+    {"route":"DEL-BLR","carrier_code":"6E","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-09-13","total_fare":6400,"currency":"INR"},
+    {"route":"DEL-BLR","carrier_code":"AI","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-09-27","total_fare":7050,"currency":"INR"},
+    {"route":"DEL-BLR","carrier_code":"QP","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-10-12","total_fare":5900,"currency":"INR"},
+    {"route":"BOM-BLR","carrier_code":"6E","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-09-13","total_fare":4600,"currency":"INR"},
+    {"route":"BOM-BLR","carrier_code":"AI","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-09-27","total_fare":4950,"currency":"INR"},
+    {"route":"BOM-BLR","carrier_code":"QP","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-10-27","total_fare":8200,"currency":"INR"},
+    {"route":"DEL-BOM","carrier_code":"6E","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-09-13","total_fare":5200,"currency":"INR"},
+    {"route":"BAD-1","carrier_code":"6E","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-09-20","total_fare":4000,"currency":"INR"},
+    {"route":"DEL-BLR","carrier_code":"AI","observed_at":"2026-09-12T08:00:00Z","travel_date":"2026-09-25","total_fare":-10,"currency":"INR"}
+  ]
+}
