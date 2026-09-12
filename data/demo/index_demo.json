@@ -1,0 +1,24 @@
+{
+  "methodology_version": "0.1.0",
+  "base_level": 100.0,
+  "routes": [
+    {
+      "route": "DEL-BOM",
+      "weight": 0.4,
+      "reference": {"6E101": 5000, "AI201": 5600, "UK901": 6200},
+      "current": {"6E101": 5400, "AI201": 5900, "UK901": 6700}
+    },
+    {
+      "route": "DEL-BLR",
+      "weight": 0.35,
+      "reference": {"6E301": 6200, "AI501": 6800, "QP701": 5800},
+      "current": {"6E301": 6500, "AI501": 7200, "QP701": 6000}
+    },
+    {
+      "route": "BOM-BLR",
+      "weight": 0.25,
+      "reference": {"6E401": 4300, "AI601": 4700, "QP801": 4500},
+      "current": {"6E401": 4550, "AI601": 5000, "QP801": 4725}
+    }
+  ]
+}
