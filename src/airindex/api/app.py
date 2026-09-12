@@ -1,16 +1,22 @@
 """FastAPI surface for the AirIndex demonstration prototype."""
 
+import json
 from decimal import Decimal
 from pathlib import Path
-import json
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from airindex.analytics.index_engine import IndexCalculationError, aggregate_route_indices, calculate_jevons_index
+from airindex.analytics.index_engine import (
+    IndexCalculationError,
+    aggregate_route_indices,
+    calculate_jevons_index,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 DEMO_PATH = ROOT / "data" / "demo" / "index_demo.json"
+DASHBOARD_PATH = ROOT / "demo" / "index-dashboard.html"
 
 app = FastAPI(title="AirIndex India API", version="0.3.0")
 
@@ -72,6 +78,13 @@ def _calculate_demo() -> dict:
         "lead_time_windows": [1, 7, 15, 30, 45],
         "note": "Demonstration replay data only; not live market data or an official CPI measure.",
     }
+
+
+@app.get("/", include_in_schema=False)
+def dashboard() -> FileResponse:
+    if not DASHBOARD_PATH.exists():
+        raise HTTPException(status_code=500, detail="Dashboard file is missing")
+    return FileResponse(DASHBOARD_PATH)
 
 
 @app.get("/health")
