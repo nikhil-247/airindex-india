@@ -1,0 +1,58 @@
+{
+  "name": "AirIndex India - Fetch and Normalize Fares",
+  "nodes": [
+    {
+      "parameters": {"rule": {"interval": [{"field": "hours", "hoursInterval": 6}]}},
+      "id": "schedule",
+      "name": "Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.AIRINDEX_SOURCE_URL}}",
+        "options": {"response": {"response": {"responseFormat": "json"}}}
+      },
+      "id": "fetch",
+      "name": "Fetch Permitted Source",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst rows = Array.isArray(items[0]?.json) ? items[0].json : (items[0]?.json?.observations ?? items.map(i => i.json));\nreturn rows.map(row => {\n  const total = Number(row.total_fare ?? row.totalFare ?? 0);\n  const observed = new Date(row.observed_at ?? row.collected_at ?? Date.now());\n  const travel = new Date(row.travel_date);\n  const advance_days = Math.round((travel - observed) / 86400000);\n  if (!/^[A-Z]{3}-[A-Z]{3}$/.test(row.route ?? '')) throw new Error('Invalid route');\n  if (!(total > 0) || advance_days < 1) throw new Error('Invalid fare observation');\n  return { json: { route: row.route, observed_at: observed.toISOString(), travel_date: row.travel_date, carrier_code: row.carrier_code, total_fare: total, advance_days, source: row.source ?? 'configured_source' } };\n});"
+      },
+      "id": "normalize",
+      "name": "Validate + Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.AIRINDEX_INGEST_URL}}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { observations: $input.all().map(i => i.json) } }}",
+        "options": {}
+      },
+      "id": "ingest",
+      "name": "Send to AirIndex API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "Every 6 Hours": {"main": [[{"node": "Fetch Permitted Source", "type": "main", "index": 0}]]},
+    "Fetch Permitted Source": {"main": [[{"node": "Validate + Normalize", "type": "main", "index": 0}]]},
+    "Validate + Normalize": {"main": [[{"node": "Send to AirIndex API", "type": "main", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "pinData": {},
+  "tags": []
+}
