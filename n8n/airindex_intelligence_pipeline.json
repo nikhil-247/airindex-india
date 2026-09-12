@@ -1,0 +1,311 @@
+{
+  "name": "AirIndex India - Intelligence Collection & Quality Pipeline",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1040, -180]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Scheduled Run - Every 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-1040, 40]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst sourceUrl = $env.AIRINDEX_SOURCE_URL;\nconst ingestUrl = $env.AIRINDEX_INGEST_URL;\nconst indexUrl = $env.AIRINDEX_INDEX_URL;\nif (!sourceUrl || !ingestUrl) throw new Error('AIRINDEX_SOURCE_URL and AIRINDEX_INGEST_URL must be configured');\nreturn [{ json: { run_id: `n8n-${now.toISOString().replace(/[-:.TZ]/g, '')}`, collected_at: now.toISOString(), source_url: sourceUrl, ingest_url: ingestUrl, index_url: indexUrl || '', freshness_limit_minutes: Number($env.AIRINDEX_FRESHNESS_LIMIT_MINUTES || 180), anomaly_threshold_pct: Number($env.AIRINDEX_ANOMALY_THRESHOLD_PCT || 35), batch_size: Number($env.AIRINDEX_BATCH_SIZE || 100), workflow_version: '0.2.0' } }];"
+      },
+      "id": "run-config",
+      "name": "Run Config + Audit ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-800, -70]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.source_url}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "X-AirIndex-Run-Id",
+              "value": "={{$json.run_id}}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "fetch-source",
+      "name": "Fetch Permitted Source",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-560, -70]
+    },
+    {
+      "parameters": {
+        "jsCode": "const context = $('Run Config + Audit ID').first().json;\nconst first = $input.first()?.json;\nlet rows;\nif (Array.isArray(first)) rows = first;\nelse if (Array.isArray(first?.observations)) rows = first.observations;\nelse rows = $input.all().map(item => item.json);\nif (!rows.length) throw new Error('Source returned zero observations');\n\nconst valid = [];\nconst rejected = [];\nconst seen = new Set();\nconst now = new Date(context.collected_at);\n\nfor (const [i, row] of rows.entries()) {\n  try {\n    const route = String(row.route ?? '').trim().toUpperCase();\n    const carrier = String(row.carrier_code ?? row.carrier ?? '').trim().toUpperCase();\n    const fare = Number(row.total_fare ?? row.totalFare);\n    const observed = new Date(row.observed_at ?? row.collected_at ?? context.collected_at);\n    const travel = new Date(row.travel_date);\n    const currency = String(row.currency ?? 'INR').toUpperCase();\n    const advance = Math.round((travel - observed) / 86400000);\n    const key = `${route}|${carrier}|${travel.toISOString().slice(0,10)}|${Math.round(fare * 100)}`;\n    if (!/^[A-Z]{3}-[A-Z]{3}$/.test(route)) throw new Error('invalid route');\n    if (!/^[A-Z0-9]{2,3}$/.test(carrier)) throw new Error('invalid carrier_code');\n    if (!(fare > 0) || fare > 1000000) throw new Error('invalid total_fare');\n    if (currency !== 'INR') throw new Error('currency must be INR');\n    if (Number.isNaN(observed.getTime()) || Number.isNaN(travel.getTime())) throw new Error('invalid date');\n    if (advance < 1 || advance > 365) throw new Error('advance_days outside 1..365');\n    if (travel < observed) throw new Error('travel_date before observed_at');\n    if (seen.has(key)) throw new Error('duplicate observation in source batch');\n    seen.add(key);\n\n    const leadWindows = [1, 7, 15, 30, 45];\n    const leadWindow = leadWindows.find(w => advance <= w) ?? 45;\n    const ageMinutes = (now - observed) / 60000;\n    const freshnessScore = Math.max(0, Math.min(1, 1 - ageMinutes / context.freshness_limit_minutes));\n    valid.push({\n      route, carrier_code: carrier, observed_at: observed.toISOString(), travel_date: travel.toISOString().slice(0, 10),\n      total_fare: Math.round(fare * 100) / 100, advance_days: advance, lead_time_window: `T+${leadWindow}`, currency,\n      source: row.source ?? 'configured_source', run_id: context.run_id, freshness_score: Number(freshnessScore.toFixed(4)),\n      row_number: i + 1\n    });\n  } catch (error) {\n    rejected.push({ row_number: i + 1, reason: error.message ?? String(error) });\n  }\n}\n\nif (!valid.length) throw new Error(`All observations rejected: ${JSON.stringify(rejected.slice(0, 5))}`);\nreturn [{ json: { ...context, observations: valid, rejected_count: rejected.length, rejected_examples: rejected.slice(0, 10), source_count: rows.length } }];"
+      },
+      "id": "normalize-quality",
+      "name": "Normalize + Hard Validation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-300, -70]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.observations.length > 0}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "quality-gate",
+      "name": "Quality Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-40, -70]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst observations = data.observations;\nconst byRoute = new Map();\nfor (const obs of observations) {\n  if (!byRoute.has(obs.route)) byRoute.set(obs.route, []);\n  byRoute.get(obs.route).push(obs.total_fare);\n}\nconst medians = {};\nfor (const [route, fares] of byRoute) {\n  fares.sort((a,b) => a-b);\n  const mid = Math.floor(fares.length / 2);\n  medians[route] = fares.length % 2 ? fares[mid] : (fares[mid - 1] + fares[mid]) / 2;\n}\nconst enriched = observations.map(obs => {\n  const median = medians[obs.route];\n  const deviationPct = median > 0 ? ((obs.total_fare - median) / median) * 100 : 0;\n  const anomaly = Math.abs(deviationPct) >= data.anomaly_threshold_pct;\n  const completeness = [obs.route, obs.carrier_code, obs.travel_date, obs.observed_at, obs.total_fare].every(Boolean) ? 1 : 0;\n  const score = Math.max(0, Math.min(1, 0.55 * completeness + 0.30 * obs.freshness_score + 0.15 * (anomaly ? 0.25 : 1)));\n  return { ...obs, route_median_fare: Number(median.toFixed(2)), deviation_pct: Number(deviationPct.toFixed(2)), anomaly_flag: anomaly, quality_score: Number(score.toFixed(4)) };\n});\nconst anomalies = enriched.filter(o => o.anomaly_flag).length;\nreturn [{ json: { ...data, observations: enriched, anomaly_count: anomalies, anomaly_rate_pct: Number((100 * anomalies / enriched.length).toFixed(2)), distinct_routes: Object.keys(medians).length, quality_avg: Number((enriched.reduce((s,o) => s + o.quality_score, 0) / enriched.length).toFixed(4)) } }];"
+      },
+      "id": "anomaly-scoring",
+      "name": "Anomaly + Quality Scoring",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, -70]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst groups = new Map();\nfor (const obs of data.observations) {\n  const key = `${obs.route}|${obs.lead_time_window}`;\n  if (!groups.has(key)) groups.set(key, []);\n  groups.get(key).push(obs);\n}\nconst items = [];\nfor (const [groupKey, observations] of groups) {\n  items.push({ json: { ...observations[0], batch_group: groupKey, batch_count: observations.length, observations: observations.map(o => ({ ...o })) } });\n}\nreturn items;"
+      },
+      "id": "group-batches",
+      "name": "Stratify by Route + Lead Window",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, -70]
+    },
+    {
+      "parameters": {
+        "batchSize": "={{$('Run Config + Audit ID').first().json.batch_size}}"
+      },
+      "id": "split-batch",
+      "name": "Controlled Batch Dispatcher",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [720, -70]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$('Run Config + Audit ID').first().json.ingest_url}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-AirIndex-Run-Id",
+              "value": "={{$('Run Config + Audit ID').first().json.run_id}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { observations: $json.observations } }}",
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "api-ingest",
+      "name": "AirIndex API Ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, -70]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Run Config + Audit ID').first().json;\nconst batch = $('Controlled Batch Dispatcher').first().json;\nconst response = $input.first().json;\nconst body = { run_id: base.run_id, processed_at: new Date().toISOString(), batch_group: batch.batch_group, batch_count: batch.batch_count, ingest_response: response, source_count: $('Normalize + Hard Validation').first().json.source_count, rejected_count: $('Normalize + Hard Validation').first().json.rejected_count, anomaly_count: $('Anomaly + Quality Scoring').first().json.anomaly_count, anomaly_rate_pct: $('Anomaly + Quality Scoring').first().json.anomaly_rate_pct, quality_avg: $('Anomaly + Quality Scoring').first().json.quality_avg };\nreturn [{ json: body }];"
+      },
+      "id": "audit-record",
+      "name": "Build Audit Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, -70]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.anomaly_rate_pct}}",
+              "operation": "largerEqual",
+              "value2": "={{Number($env.AIRINDEX_ALERT_ANOMALY_RATE_PCT || 20)}}"
+            }
+          ]
+        }
+      },
+      "id": "anomaly-alert-gate",
+      "name": "Anomaly Alert Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1440, -70]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.AIRINDEX_ALERT_WEBHOOK_URL}}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { severity: 'warning', system: 'airindex-india', event: 'fare_anomaly_rate_high', run_id: $json.run_id, anomaly_rate_pct: $json.anomaly_rate_pct, anomaly_count: $json.anomaly_count, quality_avg: $json.quality_avg, occurred_at: $json.processed_at } }}",
+        "options": {
+          "timeout": 10000,
+          "response": { "response": { "neverError": true, "responseFormat": "json" } }
+        }
+      },
+      "id": "alert-webhook",
+      "name": "Alert Webhook - Warning",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, -170]
+    },
+    {
+      "parameters": {
+        "url": "={{$('Run Config + Audit ID').first().json.index_url}}",
+        "options": {
+          "timeout": 15000,
+          "response": { "response": { "neverError": true, "responseFormat": "json" } }
+        }
+      },
+      "id": "index-refresh-read",
+      "name": "Refresh / Read Latest Index",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1680, 30]
+    },
+    {
+      "parameters": {
+        "jsCode": "const audit = $('Build Audit Record').first().json;\nconst indexPayload = $input.first().json;\nreturn [{ json: { ...audit, latest_index: indexPayload.national_index ?? indexPayload.index ?? null, index_status: indexPayload.status ?? 'unavailable', index_payload_present: Object.keys(indexPayload || {}).length > 0, provenance: { workflow_version: $('Run Config + Audit ID').first().json.workflow_version, source_url: $('Run Config + Audit ID').first().json.source_url, generated_at: new Date().toISOString() } } }];"
+      },
+      "id": "final-snapshot",
+      "name": "Create Intelligence Snapshot",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1920, 30]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.AIRINDEX_AUDIT_WEBHOOK_URL}}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {
+          "timeout": 10000,
+          "response": { "response": { "neverError": true, "responseFormat": "json" } }
+        }
+      },
+      "id": "audit-sink",
+      "name": "Audit Sink / SIEM / Drive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2160, 30]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { run_id: input.run_id ?? 'unknown', status: 'completed', message: 'AirIndex intelligence pipeline completed', completed_at: new Date().toISOString(), next_action: 'Review anomaly and quality statistics; promote only validated observations to official measurement datasets.' } }];"
+      },
+      "id": "completion",
+      "name": "Completion Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2400, 30]
+    },
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-800, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.AIRINDEX_ALERT_WEBHOOK_URL}}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { severity: 'critical', system: 'airindex-india', event: 'workflow_execution_error', execution_id: $json.execution?.id ?? null, workflow: $json.workflow?.name ?? 'unknown', error: $json.error?.message ?? 'unknown', occurred_at: new Date().toISOString() } }}",
+        "options": {
+          "timeout": 10000,
+          "response": { "response": { "neverError": true, "responseFormat": "json" } }
+        }
+      },
+      "id": "error-alert",
+      "name": "Critical Error Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-520, 300]
+    }
+  ],
+  "connections": {
+    "Manual Run": { "main": [[{ "node": "Run Config + Audit ID", "type": "main", "index": 0 }]] },
+    "Scheduled Run - Every 6h": { "main": [[{ "node": "Run Config + Audit ID", "type": "main", "index": 0 }]] },
+    "Run Config + Audit ID": { "main": [[{ "node": "Fetch Permitted Source", "type": "main", "index": 0 }]] },
+    "Fetch Permitted Source": { "main": [[{ "node": "Normalize + Hard Validation", "type": "main", "index": 0 }]] },
+    "Normalize + Hard Validation": { "main": [[{ "node": "Quality Gate", "type": "main", "index": 0 }]] },
+    "Quality Gate": { "main": [[{ "node": "Anomaly + Quality Scoring", "type": "main", "index": 0 }], [{ "node": "Completion Summary", "type": "main", "index": 0 }]] },
+    "Anomaly + Quality Scoring": { "main": [[{ "node": "Stratify by Route + Lead Window", "type": "main", "index": 0 }]] },
+    "Stratify by Route + Lead Window": { "main": [[{ "node": "Controlled Batch Dispatcher", "type": "main", "index": 0 }]] },
+    "Controlled Batch Dispatcher": { "main": [[{ "node": "AirIndex API Ingest", "type": "main", "index": 0 }]] },
+    "AirIndex API Ingest": { "main": [[{ "node": "Build Audit Record", "type": "main", "index": 0 }]] },
+    "Build Audit Record": { "main": [[{ "node": "Anomaly Alert Gate", "type": "main", "index": 0 }]] },
+    "Anomaly Alert Gate": { "main": [[{ "node": "Alert Webhook - Warning", "type": "main", "index": 0 }], [{ "node": "Refresh / Read Latest Index", "type": "main", "index": 0 }]] },
+    "Alert Webhook - Warning": { "main": [[{ "node": "Refresh / Read Latest Index", "type": "main", "index": 0 }]] },
+    "Refresh / Read Latest Index": { "main": [[{ "node": "Create Intelligence Snapshot", "type": "main", "index": 0 }]] },
+    "Create Intelligence Snapshot": { "main": [[{ "node": "Audit Sink / SIEM / Drive", "type": "main", "index": 0 }]] },
+    "Audit Sink / SIEM / Drive": { "main": [[{ "node": "Completion Summary", "type": "main", "index": 0 }]] },
+    "Error Trigger": { "main": [[{ "node": "Critical Error Alert", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {},
+  "tags": []
+}
