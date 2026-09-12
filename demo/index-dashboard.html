@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AirIndex India | Prototype Dashboard</title>
+  <style>
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;margin:0;background:#0b1020;color:#f7f8fc}
+    .wrap{max-width:1180px;margin:auto;padding:32px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.14em;opacity:.65}.title{font-size:34px;font-weight:800;margin:6px 0}.sub{opacity:.72}.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:24px}.card{background:#151c32;border:1px solid #27304b;border-radius:18px;padding:22px;box-shadow:0 14px 34px rgba(0,0,0,.2)}.hero{font-size:58px;font-weight:800;margin:6px 0}.delta{font-size:20px}.routes{margin-top:20px}.route{display:grid;grid-template-columns:1fr 100px 80px;gap:12px;padding:14px 0;border-bottom:1px solid #28314a}.bar{height:9px;background:#29324b;border-radius:999px;overflow:hidden}.fill{height:100%;background:#80bfff}.pill{padding:6px 10px;border-radius:999px;background:#23304c;display:inline-block;font-size:12px}.footer{margin-top:18px;font-size:12px;opacity:.58}@media(max-width:800px){.grid{grid-template-columns:1fr}.hero{font-size:44px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><div class="eyebrow">SIH 2026 • Statistical Intelligence Prototype</div><div class="title">AirIndex India</div><div class="sub">Measuring airfare movement, not just comparing fares.</div></div>
+    <div class="pill">DEMO REPLAY DATA</div>
+  </div>
+  <div class="grid">
+    <section class="card"><div class="eyebrow">National Experimental Airfare Index</div><div id="index" class="hero">—</div><div id="change" class="delta">Loading…</div><div class="sub" style="margin-top:8px">Base = 100.0 • Jévons elementary + weighted route aggregation</div></section>
+    <section class="card"><div class="eyebrow">Methodology & Coverage</div><div style="font-size:24px;font-weight:700;margin:8px 0">5 lead-time windows</div><div class="sub">T+1 / T+7 / T+15 / T+30 / T+45</div><div style="margin-top:18px"><div class="bar"><div class="fill" style="width:100%"></div></div></div><div class="footer">Prototype uses reproducible replay data. It is not live market data or an official CPI measure.</div></section>
+  </div>
+  <section class="card routes"><div class="eyebrow">Route Contributions</div><div id="routes"></div></section>
+  <div class="footer">AirIndex India • Source → Observation → Quality Check → Standardization → Weight → Index</div>
+</div>
+<script>
+async function load(){
+  try{
+    const r=await fetch('/api/v1/demo/index'); const d=await r.json();
+    document.getElementById('index').textContent=d.national_index.toFixed(2);
+    document.getElementById('change').textContent=(d.change_percent>=0?'+':'')+d.change_percent.toFixed(2)+'% vs base';
+    const rows=Object.entries(d.routes).map(([route,x])=>`<div class="route"><div><b>${route}</b><div class="bar" style="margin-top:8px"><div class="fill" style="width:${Math.min(100,Math.max(0,x.index-50))}%"></div></div></div><div><b>${x.index.toFixed(2)}</b><div class="sub">index</div></div><div><b>${(x.weight*100).toFixed(0)}%</b><div class="sub">weight</div></div></div>`).join('');
+    document.getElementById('routes').innerHTML=rows;
+  }catch(e){ document.getElementById('change').textContent='Start the API and refresh'; }
+}
+load();
+</script>
+</body>
+</html>
