@@ -1,8 +1,11 @@
-"""FastAPI surface for the AirIndex demonstration prototype."""
+"""FastAPI surface for the AirIndex demonstration and deployment prototype."""
+
+from __future__ import annotations
 
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -13,12 +16,14 @@ from airindex.analytics.index_engine import (
     aggregate_route_indices,
     calculate_jevons_index,
 )
+from airindex.analytics.quality_engine import QualityEngineError, assess_observations
 
 ROOT = Path(__file__).resolve().parents[3]
 DEMO_PATH = ROOT / "data" / "demo" / "index_demo.json"
+REPLAY_PATH = ROOT / "data" / "demo" / "replay_source.json"
 DASHBOARD_PATH = ROOT / "demo" / "index-dashboard.html"
 
-app = FastAPI(title="AirIndex India API", version="0.3.0")
+app = FastAPI(title="AirIndex India API", version="0.4.0")
 
 
 class FareObservationPayload(BaseModel):
@@ -35,16 +40,19 @@ class IngestRequest(BaseModel):
     observations: list[FareObservationPayload] = Field(min_length=1, max_length=500)
 
 
-def _load_demo() -> dict:
-    if not DEMO_PATH.exists():
-        raise HTTPException(status_code=500, detail="Demo dataset is missing")
-    return json.loads(DEMO_PATH.read_text(encoding="utf-8"))
+def _read_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        raise HTTPException(status_code=500, detail=f"Missing demo asset: {path.name}")
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=500, detail=f"Invalid JSON asset: {path.name}") from exc
 
 
-def _calculate_demo() -> dict:
-    payload = _load_demo()
+def _calculate_demo() -> dict[str, Any]:
+    payload = _read_json(DEMO_PATH)
     route_indices: dict[str, Decimal] = {}
-    route_details: dict[str, dict] = {}
+    route_details: dict[str, dict[str, Any]] = {}
 
     for route in payload["routes"]:
         reference = {key: Decimal(str(value)) for key, value in route["reference"].items()}
@@ -53,16 +61,25 @@ def _calculate_demo() -> dict:
             result = calculate_jevons_index(reference, current, minimum_observations=3)
         except IndexCalculationError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
         route_indices[route["route"]] = result.value
         route_details[route["route"]] = {
             "index": float(result.value),
+            "change_percent": round(float(result.value) - 100.0, 4),
+            "weighted_contribution": round(
+                (float(result.value) - 100.0) * float(route["weight"]),
+                4,
+            ),
             "observation_count": result.observation_count,
             "weight": route["weight"],
             "reference_prices": route["reference"],
             "current_prices": route["current"],
         }
 
-    weights = {route["route"]: Decimal(str(route["weight"])) for route in payload["routes"]}
+    weights = {
+        route["route"]: Decimal(str(route["weight"]))
+        for route in payload["routes"]
+    }
     try:
         national_index = aggregate_route_indices(route_indices, weights)
     except IndexCalculationError as exc:
@@ -76,7 +93,10 @@ def _calculate_demo() -> dict:
         "change_percent": round(float(national_index) - 100.0, 4),
         "routes": route_details,
         "lead_time_windows": [1, 7, 15, 30, 45],
-        "note": "Demonstration replay data only; not live market data or an official CPI measure.",
+        "note": (
+            "Demonstration replay data only; not live market data "
+            "or an official CPI measure."
+        ),
     }
 
 
@@ -93,8 +113,47 @@ def health() -> dict[str, str]:
 
 
 @app.get("/api/v1/demo/index")
-def demo_index() -> dict:
+def demo_index() -> dict[str, Any]:
     return _calculate_demo()
+
+
+@app.get("/api/v1/demo/quality")
+def demo_quality() -> dict[str, Any]:
+    payload = _read_json(REPLAY_PATH)
+    try:
+        assessment = assess_observations(payload["observations"])
+    except QualityEngineError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return {
+        "status": "demo_replay_quality_audit",
+        "source": payload.get("source", "unknown"),
+        "currency": payload.get("currency", "INR"),
+        "source_count": assessment.source_count,
+        "accepted_count": len(assessment.accepted),
+        "rejected_count": len(assessment.rejected),
+        "duplicate_count": assessment.duplicate_count,
+        "anomaly_count": assessment.anomaly_count,
+        "anomaly_rate_pct": assessment.anomaly_rate_pct,
+        "quality_avg": assessment.quality_avg,
+        "distinct_routes": assessment.distinct_routes,
+        "lead_time_windows": assessment.window_counts,
+        "rejected_examples": assessment.rejected[:10],
+        "anomaly_examples": [
+            row
+            for row in assessment.accepted
+            if row["anomaly_flag"]
+        ][:10],
+        "note": (
+            "Deterministic replay audit for prototype demonstration. "
+            "No claim of live-market completeness is made."
+        ),
+    }
+
+
+@app.get("/api/v1/demo/overview")
+def demo_overview() -> dict[str, Any]:
+    return {"index": _calculate_demo(), "quality": demo_quality()}
 
 
 @app.post("/api/v1/ingest/fare-observations")
