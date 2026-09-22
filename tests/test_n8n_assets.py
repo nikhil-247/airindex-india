@@ -16,22 +16,29 @@ def test_advanced_n8n_workflow_has_expected_nodes_and_is_inactive() -> None:
         "Run Config + Audit ID",
         "Fetch Permitted Source",
         "Normalize + Hard Validation",
-        "Quality Gate",
         "Anomaly + Quality Scoring",
-        "Stratify by Route + Lead Window",
-        "Controlled Batch Dispatcher",
+        "Measurement Readiness Gate",
+        "Stratify Route + Lead Window",
+        "Controlled Batch Planner",
         "AirIndex API Ingest",
-        "Build Audit Record",
+        "Build Run Audit Summary",
         "Anomaly Alert Gate",
-        "Refresh / Read Latest Index",
+        "Alert Webhook Configured?",
+        "Send Anomaly Alert",
+        "Index Read-Back Configured?",
+        "Read Latest AirIndex",
         "Create Intelligence Snapshot",
-        "Audit Sink / SIEM / Drive",
+        "Audit Sink Configured?",
+        "Write Audit Snapshot",
         "Completion Summary",
+        "Measurement Blocked Summary",
         "Error Trigger",
+        "Critical Alert Configured?",
         "Critical Error Alert",
     }
 
     assert expected <= node_names
+    assert "Controlled Batch Dispatcher" not in node_names
     assert workflow["active"] is False
 
 
@@ -42,3 +49,10 @@ def test_replay_source_is_explicitly_non_live() -> None:
     assert payload["source"] == "airindex-demo-replay"
     assert payload["currency"] == "INR"
     assert len(payload["observations"]) >= 10
+
+
+def test_vercel_entrypoint_and_dashboard_exist() -> None:
+    assert (ROOT / "api" / "index.py").exists()
+    assert (ROOT / "index.html").exists()
+    config = json.loads((ROOT / "vercel.json").read_text(encoding="utf-8"))
+    assert config["version"] == 2
