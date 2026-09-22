@@ -56,7 +56,9 @@ def calculate_jevons_index(
         log_sum += log(current / reference)
 
     geometric_relative = exp(log_sum / len(matched_keys))
-    value = Decimal(str(float(base_level) * geometric_relative)).quantize(Decimal("0.000001"))
+    value = Decimal(str(float(base_level) * geometric_relative)).quantize(
+        Decimal("0.000001")
+    )
     return ElementaryIndexResult(value=value, observation_count=len(matched_keys))
 
 
