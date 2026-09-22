@@ -5,9 +5,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _load_json(name: str) -> dict:
+    return json.loads((ROOT / "n8n" / name).read_text(encoding="utf-8"))
+
+
 def test_advanced_n8n_workflow_has_expected_nodes_and_is_inactive() -> None:
-    path = ROOT / "n8n" / "airindex_intelligence_pipeline.json"
-    workflow = json.loads(path.read_text(encoding="utf-8"))
+    workflow = _load_json("airindex_intelligence_pipeline.json")
 
     nodes = workflow["nodes"]
     node_names = {node["name"] for node in nodes}
@@ -20,7 +23,7 @@ def test_advanced_n8n_workflow_has_expected_nodes_and_is_inactive() -> None:
         "Normalize + Hard Validation",
         "Anomaly + Quality Scoring",
         "Measurement Readiness Gate",
-        "Stratify Route + Lead Window",
+        "Stratify by Route + Lead Window",
         "Controlled Batch Planner",
         "AirIndex API Ingest",
         "Build Run Audit Summary",
@@ -48,6 +51,26 @@ def test_advanced_n8n_workflow_has_expected_nodes_and_is_inactive() -> None:
         for output_group in connection.get("main", []):
             for edge in output_group:
                 assert edge["node"] in node_names
+
+
+def test_cloud_demo_is_importable_without_env_configuration() -> None:
+    workflow = _load_json("airindex_cloud_demo.json")
+
+    node_names = {node["name"] for node in workflow["nodes"]}
+    assert workflow["active"] is False
+    assert "Run Cloud Demo" in node_names
+    assert "Demo Configuration" in node_names
+    assert "Fetch Replay Source" in node_names
+    assert "Completion Summary" in node_names
+
+    config_code = next(
+        node["parameters"]["jsCode"]
+        for node in workflow["nodes"]
+        if node["name"] == "Demo Configuration"
+    )
+    assert "ingest_enabled:false" in config_code
+    assert "index_enabled:false" in config_code
+    assert "YOUR-PROJECT.vercel.app" in config_code
 
 
 def test_replay_source_is_explicitly_non_live() -> None:
