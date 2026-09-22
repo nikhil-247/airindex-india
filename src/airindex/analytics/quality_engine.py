@@ -7,7 +7,6 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 
-
 _ROUTE_PATTERN = re.compile(r"^[A-Z]{3}-[A-Z]{3}$")
 _CARRIER_PATTERN = re.compile(r"^[A-Z0-9]{2,3}$")
 _LEAD_WINDOWS = (1, 7, 15, 30, 45)
