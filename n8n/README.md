@@ -1,14 +1,25 @@
 # AirIndex India n8n automation
 
-`airindex_intelligence_pipeline.json` is the full prototype orchestration workflow. It is intentionally inactive after import so configuration can be reviewed first.
+AirIndex provides two n8n imports:
 
-## Pipeline
+- `airindex_intelligence_pipeline.json`: full configurable orchestration workflow using instance environment variables.
+- `airindex_cloud_demo.json`: n8n Cloud-friendly presentation workflow with configuration stored inside the workflow, so it does not depend on instance environment variables.
 
-`Manual/Schedule -> Run config -> permitted source -> normalize + hard validation -> quality gate -> anomaly/quality scoring -> route + lead-time stratification -> controlled batches -> AirIndex ingest -> audit -> anomaly alert -> latest-index read-back -> intelligence snapshot -> audit sink`
+Both are intentionally inactive after import.
+
+## Full intelligence pipeline
+
+`Manual/Schedule -> Run config -> permitted source -> normalize + hard validation -> anomaly/quality scoring -> measurement readiness -> route + lead-time stratification -> controlled batching -> AirIndex ingest -> audit -> alerting -> index read-back -> intelligence snapshot -> audit sink`
 
 An `Error Trigger -> Critical Error Alert` path provides operational failure visibility.
 
-## Environment
+## Cloud demo pipeline
+
+`Manual -> Demo Configuration -> Replay Source -> Validation -> Anomaly/Quality -> Readiness -> Route/Lead-Time -> Batch -> optional Vercel Ingest -> Audit -> optional Index Read-back -> Snapshot -> Completion`
+
+The cloud demo starts with `ingest_enabled=false` and `index_enabled=false`, so it can run against the public replay dataset without any secret or server environment configuration. After Vercel deployment, edit the `Demo Configuration` node, set the Vercel URLs and switch both flags to `true` for the integrated run.
+
+## Full-pipeline environment
 
 ```text
 AIRINDEX_SOURCE_URL
@@ -20,26 +31,39 @@ AIRINDEX_FRESHNESS_LIMIT_MINUTES=180
 AIRINDEX_ANOMALY_THRESHOLD_PCT=35
 AIRINDEX_ALERT_ANOMALY_RATE_PCT=20
 AIRINDEX_BATCH_SIZE=100
+AIRINDEX_MIN_OBSERVATIONS=3
+AIRINDEX_MIN_ROUTES=3
 ```
 
-For a local presentation, `data/demo/replay_source.json` is a safe replay source. It includes normal observations plus deliberately invalid/duplicate examples so the validation layer can be demonstrated without claiming live market data.
-
-## Quality controls demonstrated
+## Quality controls
 
 - Route and carrier-format validation
 - INR-only validation
-- Positive fare and bounded fare checks
+- Positive and bounded fare checks
 - Travel-date and advance-purchase validation
-- Duplicate detection within a source batch
+- Duplicate detection
 - Freshness scoring
 - Route-level median deviation and anomaly flags
 - Observation quality score
 - T+1/T+7/T+15/T+30/T+45 lead-time stratification
-- Batch dispatch to protect downstream APIs
+- Measurement-readiness gate
+- Controlled batch dispatch
 - Run-level provenance and audit identifiers
 - Optional anomaly alerts
-- Latest-index read-back
-- Optional audit/SIEM sink
-- Workflow-level critical error alerting
+- Optional latest-index read-back
+- Optional audit/SIEM/Drive sink
+- Workflow-level critical error alerts
 
-The workflow does not bypass CAPTCHAs, anti-bot controls, paywalls or other access restrictions. Use only data sources that the collection method is permitted to access.
+## Presentation demo
+
+Use `data/demo/replay_source.json` as the controlled replay source. It contains valid observations plus deliberately invalid and duplicate examples so the quality layer can be demonstrated without presenting fabricated values as live market data.
+
+Recommended demo sequence:
+
+1. Import `airindex_cloud_demo.json`.
+2. Open `Demo Configuration` and leave the two integration flags off for the first run.
+3. Run manually and show the validation, anomaly, stratification, batching and final audit nodes.
+4. After deploying AirIndex to Vercel, set `ingest_url` and `index_url`, then turn the flags on.
+5. Run again and show the same pipeline crossing the deployed API boundary.
+
+Do not configure the workflows to bypass CAPTCHAs, anti-bot controls, paywalls or source restrictions. Use only data sources that the collection method is permitted to access.
