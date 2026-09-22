@@ -1,5 +1,5 @@
+import importlib.util
 import json
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,8 +65,10 @@ def test_vercel_entrypoint_and_dashboard_exist() -> None:
     config = json.loads((ROOT / "vercel.json").read_text(encoding="utf-8"))
     assert config["version"] == 2
 
-    sys.path.insert(0, str(ROOT / "src"))
-    import importlib
+    spec = importlib.util.spec_from_file_location("vercel_entrypoint", ROOT / "api" / "index.py")
+    assert spec is not None
+    assert spec.loader is not None
 
-    module = importlib.import_module("api.index")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
     assert module.app.title == "AirIndex India API"
