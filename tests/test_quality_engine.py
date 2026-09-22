@@ -3,7 +3,6 @@ from pathlib import Path
 
 from airindex.analytics.quality_engine import assess_observations
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
