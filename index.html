@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08111f">
+  <title>AirIndex India | Intelligence Dashboard</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#eef4ff;background:#08111f}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0%,#15304f 0,#08111f 42%,#050a12 100%);min-height:100vh}
+    .wrap{max-width:1240px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
+    .eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:#8ea6c3}.title{font-size:38px;font-weight:850;margin:7px 0}.sub{color:#9fb2c8}
+    .pill{border:1px solid #2c4765;background:#102239;color:#b9d8ff;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:750}
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;margin-top:22px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+    .card{background:rgba(11,24,41,.82);border:1px solid #203852;border-radius:18px;padding:20px;box-shadow:0 18px 45px rgba(0,0,0,.22);backdrop-filter:blur(8px)}
+    .hero{font-size:62px;font-weight:850;line-height:1;margin-top:8px}.delta{font-size:18px;margin-top:10px}.muted{color:#7890aa;font-size:12px}
+    .metric-value{font-size:28px;font-weight:800;margin-top:7px}.section{margin-top:16px}.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .section-title{font-size:15px;font-weight:800}.route{display:grid;grid-template-columns:1fr 120px 90px;gap:16px;align-items:center;padding:15px 0;border-top:1px solid #1a3148}
+    .route:first-child{border-top:0}.route-name{font-weight:780}.bar{height:9px;background:#162a40;border-radius:999px;overflow:hidden;margin-top:8px}.fill{height:100%;background:linear-gradient(90deg,#49a5ff,#8fcbff)}
+    .value{font-weight:800;text-align:right}.badge{font-size:10px;padding:5px 8px;border-radius:999px;background:#122d21;color:#9ff0c8;display:inline-block}
+    .windows{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.window{padding:13px;border:1px solid #203852;border-radius:12px;text-align:center}.window strong{display:block;font-size:18px}.window span{display:block;color:#7890aa;font-size:10px;margin-top:4px}
+    .audit{display:grid;grid-template-columns:1fr 1fr;gap:10px}.audit-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #1a3148;font-size:12px}.audit-row:last-child{border-bottom:0}
+    .alert{margin-top:10px;padding:11px 12px;border-radius:12px;background:#2a1d11;border:1px solid #68461f;color:#ffd9a2;font-size:12px}.ok{background:#10251d;border-color:#28553f;color:#a8f2ce}
+    footer{margin-top:20px;color:#627891;font-size:11px;text-align:center;line-height:1.6}.spinner{opacity:.65}
+    @media(max-width:880px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.windows{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:560px){.wrap{padding:18px}.top{flex-direction:column}.title{font-size:30px}.hero{font-size:48px}.metrics{grid-template-columns:1fr 1fr}.windows{grid-template-columns:repeat(2,1fr)}.route{grid-template-columns:1fr 90px}.route .weight{display:none}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">SIH 2026 • Statistical Intelligence Prototype</div>
+      <div class="title">AirIndex India</div>
+      <div class="sub">Measuring airfare movement, not just comparing fares.</div>
+    </div>
+    <div class="pill">DEMO REPLAY DATA</div>
+  </header>
+
+  <section class="grid">
+    <article class="card">
+      <div class="eyebrow">National Experimental Airfare Price Index</div>
+      <div id="index" class="hero spinner">Loading</div>
+      <div id="change" class="delta">Reading measurement engine…</div>
+      <div class="muted" style="margin-top:10px">Base = 100.00 • Jévons elementary indices + fixed route weights</div>
+    </article>
+    <article class="card">
+      <div class="eyebrow">Measurement Pipeline Status</div>
+      <div class="audit" style="margin-top:10px">
+        <div class="audit-row"><span>Source observations</span><strong id="source">—</strong></div>
+        <div class="audit-row"><span>Accepted</span><strong id="accepted">—</strong></div>
+        <div class="audit-row"><span>Rejected</span><strong id="rejected">—</strong></div>
+        <div class="audit-row"><span>Duplicates</span><strong id="duplicates">—</strong></div>
+        <div class="audit-row"><span>Anomalies</span><strong id="anomalies">—</strong></div>
+        <div class="audit-row"><span>Average quality</span><strong id="quality">—</strong></div>
+      </div>
+      <div id="status" class="alert ok">Deterministic replay audit ready.</div>
+    </article>
+  </section>
+
+  <section class="metrics">
+    <article class="card"><div class="eyebrow">Routes</div><div id="routes-count" class="metric-value">—</div><div class="muted">distinct routes measured</div></article>
+    <article class="card"><div class="eyebrow">Lead windows</div><div class="metric-value">5</div><div class="muted">T+1 → T+45 buckets</div></article>
+    <article class="card"><div class="eyebrow">Methodology</div><div id="method" class="metric-value">v—</div><div class="muted">versioned calculation</div></article>
+    <article class="card"><div class="eyebrow">Provenance</div><div class="metric-value">Traceable</div><div class="muted">source → QC → index</div></article>
+  </section>
+
+  <section class="card section">
+    <div class="section-head"><div class="section-title">Route-level movement</div><span class="badge">Fixed basket weights</span></div>
+    <div id="routes"></div>
+  </section>
+
+  <section class="card section">
+    <div class="section-head"><div class="section-title">Booking-horizon coverage</div><span class="muted">Observation distribution</span></div>
+    <div id="windows" class="windows"></div>
+  </section>
+
+  <section class="card section">
+    <div class="section-head"><div class="section-title">Detected anomalies</div><span class="muted">Illustrative replay audit</span></div>
+    <div id="anomaly-list"><span class="muted">Loading…</span></div>
+  </section>
+
+  <footer>
+    AirIndex India • Source → Observation → Quality Check → Standardization → Weight → APIx<br>
+    Prototype replay values are not live market data and are not an official CPI measure.
+  </footer>
+</main>
+
+<script>
+const esc = value => String(value ?? "").replace(/[&<>"']/g, ch => ({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+}[ch]));
+
+async function load() {
+  try {
+    const response = await fetch("/api/v1/demo/overview", {cache:"no-store"});
+    if (!response.ok) throw new Error("API returned " + response.status);
+    const payload = await response.json();
+    const index = payload.index;
+    const quality = payload.quality;
+
+    document.getElementById("index").textContent = index.national_index.toFixed(2);
+    document.getElementById("index").classList.remove("spinner");
+    document.getElementById("change").textContent =
+      (index.change_percent >= 0 ? "+" : "") + index.change_percent.toFixed(2) + "% vs base";
+    document.getElementById("source").textContent = quality.source_count;
+    document.getElementById("accepted").textContent = quality.accepted_count;
+    document.getElementById("rejected").textContent = quality.rejected_count;
+    document.getElementById("duplicates").textContent = quality.duplicate_count;
+    document.getElementById("anomalies").textContent = quality.anomaly_count;
+    document.getElementById("quality").textContent = (quality.quality_avg * 100).toFixed(1) + "%";
+    document.getElementById("routes-count").textContent = quality.distinct_routes;
+    document.getElementById("method").textContent = "v" + esc(index.methodology_version);
+
+    const routes = Object.entries(index.routes);
+    document.getElementById("routes").innerHTML = routes.map(([route, item]) => {
+      const width = Math.min(100, Math.max(2, 50 + (item.index - 100) * 3));
+      return '<div class="route">' +
+        '<div><div class="route-name">' + esc(route) + '</div><div class="bar"><div class="fill" style="width:'+width+'%"></div></div></div>' +
+        '<div class="value">' + item.index.toFixed(2) + '<div class="muted">' + (item.change_percent >= 0 ? "+" : "") + item.change_percent.toFixed(2) + "%</div></div>' +
+        '<div class="value weight">' + (item.weight * 100).toFixed(0) + '%<div class="muted">weight</div></div>' +
+      '</div>';
+    }).join("");
+
+    const windowOrder = ["T+1","T+7","T+15","T+30","T+45"];
+    document.getElementById("windows").innerHTML = windowOrder.map(key =>
+      '<div class="window"><strong>' + (quality.lead_time_windows[key] || 0) + '</strong><span>' + key + '</span></div>'
+    ).join("");
+
+    if (quality.anomaly_count > 0) {
+      document.getElementById("status").className = "alert";
+      document.getElementById("status").textContent =
+        quality.anomaly_count + " anomaly observation(s) flagged for review; they remain visible for auditability.";
+      document.getElementById("anomaly-list").innerHTML = quality.anomaly_examples.map(row =>
+        '<div class="audit-row"><span><strong>' + esc(row.route) + '</strong> • ' + esc(row.carrier_code) +
+        ' • ₹' + Number(row.total_fare).toFixed(0) + '</span><span>' + Number(row.deviation_pct).toFixed(1) + '% from route median</span></div>'
+      ).join("");
+    } else {
+      document.getElementById("anomaly-list").innerHTML = '<span class="muted">No anomalies detected in this replay.</span>';
+    }
+  } catch (error) {
+    document.getElementById("status").className = "alert";
+    document.getElementById("status").textContent = "Dashboard could not reach the API. Start or deploy the backend and refresh.";
+    document.getElementById("change").textContent = "API unavailable";
+  }
+}
+
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>
