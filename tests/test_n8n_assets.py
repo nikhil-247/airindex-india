@@ -23,7 +23,7 @@ def test_advanced_n8n_workflow_has_expected_nodes_and_is_inactive() -> None:
         "Normalize + Hard Validation",
         "Anomaly + Quality Scoring",
         "Measurement Readiness Gate",
-        "Stratify by Route + Lead Window",
+        "Stratify Route + Lead Window",
         "Controlled Batch Planner",
         "AirIndex API Ingest",
         "Build Run Audit Summary",
