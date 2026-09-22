@@ -1,5 +1,4 @@
 from fastapi.testclient import TestClient
-
 from airindex.api.app import app
 
 
@@ -40,3 +39,4 @@ def test_ingest_endpoint_validates_n8n_payload_shape() -> None:
     )
     assert response.status_code == 200
     assert response.json()["observation_count"] == 1
+}
