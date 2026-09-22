@@ -1,0 +1,432 @@
+{
+  "name": "AirIndex India - n8n Cloud Demo (No Env Required)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual",
+      "name": "Run Cloud Demo",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{\n  workflow_version:\"0.4.0-cloud-demo\",\n  source_url:\"https://raw.githubusercontent.com/nikhil-247/airindex-india/feature/phase-3-index-engine/data/demo/replay_source.json\",\n  ingest_enabled:false,\n  ingest_url:\"https://YOUR-PROJECT.vercel.app/api/v1/ingest/fare-observations\",\n  index_enabled:false,\n  index_url:\"https://YOUR-PROJECT.vercel.app/api/v1/demo/index\",\n  anomaly_threshold_pct:35,\n  freshness_limit_minutes:180,\n  minimum_observations:3,\n  minimum_routes:3,\n  batch_size:50,\n  run_id:\"cloud-demo-\"+new Date().toISOString().replace(/[-:.TZ]/g,\"\"),\n  started_at:new Date().toISOString()\n}}];"
+      },
+      "id": "config",
+      "name": "Demo Configuration",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -980,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.source_url}}",
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "fetch",
+      "name": "Fetch Replay Source",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const config=$('Demo Configuration').first().json;\nconst first=$input.first()?.json;\nconst rows=Array.isArray(first)?first:(Array.isArray(first?.observations)?first.observations:$input.all().map(i=>i.json));\nconst accepted=[]; const rejected=[]; const seen=new Set();\nfor(const [i,row] of rows.entries()){\n  try{\n    const route=String(row.route??\"\").trim().toUpperCase();\n    const carrier=String(row.carrier_code??row.carrier??\"\").trim().toUpperCase();\n    const fare=Number(row.total_fare??row.totalFare);\n    const observed=new Date(row.observed_at??config.started_at);\n    const travel=new Date(row.travel_date);\n    const currency=String(row.currency??\"INR\").toUpperCase();\n    const advance=Math.round((travel-observed)/86400000);\n    if(!/^[A-Z]{3}-[A-Z]{3}$/.test(route)) throw new Error(\"invalid route\");\n    if(!/^[A-Z0-9]{2,3}$/.test(carrier)) throw new Error(\"invalid carrier_code\");\n    if(!(fare>0)||fare>1000000) throw new Error(\"invalid total_fare\");\n    if(currency!==\"INR\") throw new Error(\"currency must be INR\");\n    if(Number.isNaN(observed.getTime())||Number.isNaN(travel.getTime())) throw new Error(\"invalid date\");\n    if(advance<1||advance>365) throw new Error(\"advance_days outside 1..365\");\n    const key=route+\"|\"+carrier+\"|\"+travel.toISOString().slice(0,10)+\"|\"+Math.round(fare*100);\n    if(seen.has(key)) throw new Error(\"duplicate observation\");\n    seen.add(key);\n    const window=[1,7,15,30,45].find(w=>advance<=w)??45;\n    const age=Math.max(0,(new Date(config.started_at)-observed)/60000);\n    const freshness=Math.max(0,Math.min(1,1-age/config.freshness_limit_minutes));\n    accepted.push({route,carrier_code:carrier,observed_at:observed.toISOString(),travel_date:travel.toISOString().slice(0,10),total_fare:Math.round(fare*100)/100,advance_days:advance,lead_time_window:\"T+\"+window,currency,source:row.source??\"airindex-demo-replay\",freshness_score:Number(freshness.toFixed(4)),row_number:i+1});\n  }catch(e){rejected.push({row_number:i+1,reason:e.message??String(e)});}\n}\nif(!accepted.length) throw new Error(\"No valid observations\");\nreturn [{json:{...config,observations:accepted,source_count:rows.length,rejected_count:rejected.length,rejected_examples:rejected.slice(0,10)}}];"
+      },
+      "id": "validate",
+      "name": "Normalize + Hard Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$input.first().json; const byRoute={};\nfor(const o of d.observations)(byRoute[o.route]??=[]).push(o.total_fare);\nconst med={}; for(const [r,fs] of Object.entries(byRoute)){const v=[...fs].sort((a,b)=>a-b);const m=Math.floor(v.length/2);med[r]=v.length%2?v[m]:(v[m-1]+v[m])/2;}\nconst observations=d.observations.map(o=>{const dev=((o.total_fare-med[o.route])/med[o.route])*100;const anomaly=Math.abs(dev)>=d.anomaly_threshold_pct;const q=Math.max(0,Math.min(1,0.55+0.30*o.freshness_score+0.15*(anomaly?0.25:1)));return {...o,route_median_fare:Number(med[o.route].toFixed(2)),deviation_pct:Number(dev.toFixed(2)),anomaly_flag:anomaly,quality_score:Number(q.toFixed(4))};});\nconst anomalies=observations.filter(o=>o.anomaly_flag).length;\nreturn [{json:{...d,observations,anomaly_count:anomalies,anomaly_rate_pct:Number((100*anomalies/observations.length).toFixed(2)),distinct_routes:Object.keys(med).length,quality_avg:Number((observations.reduce((s,o)=>s+o.quality_score,0)/observations.length).toFixed(4))}}];"
+      },
+      "id": "quality",
+      "name": "Anomaly + Quality Scoring",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.observations.length >= $json.minimum_observations && $json.distinct_routes >= $json.minimum_routes}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "readiness",
+      "name": "Measurement Readiness Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -40,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$input.first().json; const groups={};\nfor(const o of d.observations){const k=o.route+\"|\"+o.lead_time_window;(groups[k]??=[]).push(o);}\nreturn Object.entries(groups).map(([group,observations])=>({json:{...d,batch_group:group,observations}}));"
+      },
+      "id": "stratify",
+      "name": "Route + Lead-Time Stratification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const batchSize=$('Demo Configuration').first().json.batch_size; const out=[]; let n=0;\nfor(const item of $input.all()){for(let i=0;i<item.json.observations.length;i+=batchSize){n++;out.push({json:{run_id:item.json.run_id,batch_id:item.json.run_id+\"-b\"+n,batch_group:item.json.batch_group,batch_number:n,observations:item.json.observations.slice(i,i+batchSize)}});}}\nreturn out;"
+      },
+      "id": "batch",
+      "name": "Controlled Batch Planner",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$('Demo Configuration').first().json.ingest_enabled}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "ingestgate",
+      "name": "Send to Deployed API?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$('Demo Configuration').first().json.ingest_url}}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {observations:$json.observations} }}",
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "ingest",
+      "name": "AirIndex API Ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$input.first()?.json??{}; const q=$('Anomaly + Quality Scoring').first().json; const batches=$('Controlled Batch Planner').all();\nreturn [{json:{run_id:q.run_id,status:\"n8n_quality_complete\",workflow_version:q.workflow_version,source_count:q.source_count,accepted_count:q.observations.length,rejected_count:q.rejected_count,duplicate_or_rejected_examples:q.rejected_examples,distinct_routes:q.distinct_routes,anomaly_count:q.anomaly_count,anomaly_rate_pct:q.anomaly_rate_pct,quality_avg:q.quality_avg,batch_count:batches.length,ingest_enabled:$('Demo Configuration').first().json.ingest_enabled,api_response:d}}];"
+      },
+      "id": "audit",
+      "name": "Build Intelligence Audit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$('Demo Configuration').first().json.index_enabled}}",
+              "operation": "isTrue"
+            }
+          ]
+        }
+      },
+      "id": "indexgate",
+      "name": "Read Back Deployed Index?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$('Demo Configuration').first().json.index_url}}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "index",
+      "name": "Read Latest AirIndex",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1640,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const audit=$('Build Intelligence Audit').first().json; const p=$input.first()?.json??{};\nreturn [{json:{...audit,latest_index:p.national_index??p.index??null,index_status:p.status??\"demo-only\",provenance:{source_url:$('Demo Configuration').first().json.source_url,generated_at:new Date().toISOString()}}}];"
+      },
+      "id": "snapshot",
+      "name": "Create Intelligence Snapshot",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$input.first().json; return [{json:{...d,finished_at:new Date().toISOString(),message:\"AirIndex Cloud Demo pipeline completed\",presentation_note:\"Turn ingest_enabled on after Vercel deployment; keep replay values labelled as demo data.\"}}];"
+      },
+      "id": "done",
+      "name": "Completion Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2120,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Run Cloud Demo": {
+      "main": [
+        [
+          {
+            "node": "Demo Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Demo Configuration": {
+      "main": [
+        [
+          {
+            "node": "Fetch Replay Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Replay Source": {
+      "main": [
+        [
+          {
+            "node": "Normalize + Hard Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize + Hard Validate": {
+      "main": [
+        [
+          {
+            "node": "Anomaly + Quality Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anomaly + Quality Scoring": {
+      "main": [
+        [
+          {
+            "node": "Measurement Readiness Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Measurement Readiness Gate": {
+      "main": [
+        [
+          {
+            "node": "Route + Lead-Time Stratification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Completion Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route + Lead-Time Stratification": {
+      "main": [
+        [
+          {
+            "node": "Controlled Batch Planner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Controlled Batch Planner": {
+      "main": [
+        [
+          {
+            "node": "Send to Deployed API?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Deployed API?": {
+      "main": [
+        [
+          {
+            "node": "AirIndex API Ingest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Intelligence Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AirIndex API Ingest": {
+      "main": [
+        [
+          {
+            "node": "Build Intelligence Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Intelligence Audit": {
+      "main": [
+        [
+          {
+            "node": "Read Back Deployed Index?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Back Deployed Index?": {
+      "main": [
+        [
+          {
+            "node": "Read Latest AirIndex",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Intelligence Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Latest AirIndex": {
+      "main": [
+        [
+          {
+            "node": "Create Intelligence Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Intelligence Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Completion Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "tags": []
+}
