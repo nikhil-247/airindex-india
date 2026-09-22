@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
-import re
+from datetime import UTC, date, datetime
 
 
 _ROUTE_PATTERN = re.compile(r"^[A-Z]{3}-[A-Z]{3}$")
@@ -41,8 +41,8 @@ def _parse_datetime(value: object, label: str) -> datetime:
     except ValueError as exc:
         raise QualityEngineError(f"{label} is invalid") from exc
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def _parse_date(value: object, label: str) -> date:
@@ -87,10 +87,10 @@ def assess_observations(
                 )
             except QualityEngineError:
                 continue
-        reference_time = max(observed_times, default=datetime.now(timezone.utc))
+        reference_time = max(observed_times, default=datetime.now(UTC))
     elif reference_time.tzinfo is None:
-        reference_time = reference_time.replace(tzinfo=timezone.utc)
-    reference_time = reference_time.astimezone(timezone.utc)
+        reference_time = reference_time.replace(tzinfo=UTC)
+    reference_time = reference_time.astimezone(UTC)
 
     for row_number, row in enumerate(rows, start=1):
         try:
