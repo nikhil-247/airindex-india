@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -8,7 +9,9 @@ def test_advanced_n8n_workflow_has_expected_nodes_and_is_inactive() -> None:
     path = ROOT / "n8n" / "airindex_intelligence_pipeline.json"
     workflow = json.loads(path.read_text(encoding="utf-8"))
 
-    node_names = {node["name"] for node in workflow["nodes"]}
+    nodes = workflow["nodes"]
+    node_names = {node["name"] for node in nodes}
+    node_ids = {node["id"] for node in nodes}
     expected = {
         "Manual Run",
         "Scheduled Run - Every 6h",
@@ -37,8 +40,14 @@ def test_advanced_n8n_workflow_has_expected_nodes_and_is_inactive() -> None:
     }
 
     assert expected <= node_names
+    assert len(node_ids) == len(nodes)
     assert "Controlled Batch Dispatcher" not in node_names
     assert workflow["active"] is False
+
+    for connection in workflow["connections"].values():
+        for output_group in connection.get("main", []):
+            for edge in output_group:
+                assert edge["node"] in node_names
 
 
 def test_replay_source_is_explicitly_non_live() -> None:
@@ -55,3 +64,9 @@ def test_vercel_entrypoint_and_dashboard_exist() -> None:
     assert (ROOT / "index.html").exists()
     config = json.loads((ROOT / "vercel.json").read_text(encoding="utf-8"))
     assert config["version"] == 2
+
+    sys.path.insert(0, str(ROOT / "src"))
+    import importlib
+
+    module = importlib.import_module("api.index")
+    assert module.app.title == "AirIndex India API"
