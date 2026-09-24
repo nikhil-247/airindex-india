@@ -436,7 +436,9 @@ class DemoStore:
             fares = [
                 float(row["total_fare"])
                 for row in connection.execute(
-                    "SELECT total_fare FROM observations WHERE route = ? AND quality_status = 'accepted' ORDER BY total_fare",
+                    "SELECT total_fare FROM observations "
+                    "WHERE route = ? AND quality_status = 'accepted' "
+                    "ORDER BY total_fare",
                     (route_name,),
                 ).fetchall()
             ]
