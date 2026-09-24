@@ -8,6 +8,9 @@ AirIndex is designed as an auditable measurement pipeline: it turns permitted ai
 
 ## Current prototype
 
+The repository now includes a multi-page product website with Home, Dashboard, Route Explorer, Quality & Audit, Methodology, Pipeline controls and FastAPI docs. All pages use the same-origin API and the committed replay dataset for a deterministic demo.
+
+
 - Deterministic Jévons elementary-index calculation with fixed route weights.
 - PostgreSQL schema and Alembic migration foundations for observations, routes, sources, baskets and index runs.
 - FastAPI endpoints for the replay index and a deterministic data-quality audit.
