@@ -640,6 +640,29 @@ class DemoStore:
                 )
                 inserted += 1
             self._refresh_aggregates(c)
+            current_routes = self._dynamic_routes()
+            current_index = self._national_index(current_routes)
+            total_observations = int(
+                c.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
+            )
+            today = date.today().isoformat()
+            c.execute(
+                """
+                INSERT INTO daily_index(
+                    index_date, index_value, change_percent, observation_count
+                ) VALUES (?, ?, ?, ?)
+                ON CONFLICT(index_date) DO UPDATE SET
+                    index_value = excluded.index_value,
+                    change_percent = excluded.change_percent,
+                    observation_count = excluded.observation_count
+                """,
+                (
+                    today,
+                    round(current_index, 4),
+                    round(current_index - 100.0, 4),
+                    total_observations,
+                ),
+            )
             c.commit()
         return inserted
 
