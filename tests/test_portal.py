@@ -66,7 +66,9 @@ def test_dynamic_stats_endpoints_are_database_backed() -> None:
 
 
 def test_ingest_persists_demo_observation() -> None:
-    before = client.get("/api/v1/stats/summary").json()["observation_count"]
+    before_payload = client.get("/api/v1/stats/summary").json()
+    before = before_payload["observation_count"]
+    before_index = before_payload["national_index"]
     response = client.post(
         "/api/v1/ingest/fare-observations",
         json={
@@ -76,7 +78,7 @@ def test_ingest_persists_demo_observation() -> None:
                     "observed_at": "2026-09-25T10:00:00Z",
                     "travel_date": "2026-10-25",
                     "carrier_code": "6E",
-                    "total_fare": 5711,
+                    "total_fare": 15000,
                     "advance_days": 30,
                     "source": "test-browser",
                 }
@@ -87,3 +89,5 @@ def test_ingest_persists_demo_observation() -> None:
     assert response.json()["persisted_count"] == 1
     after = client.get("/api/v1/stats/summary").json()["observation_count"]
     assert after == before + 1
+    after_index = client.get("/api/v1/stats/summary").json()["national_index"]
+    assert after_index > before_index
