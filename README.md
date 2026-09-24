@@ -12,7 +12,7 @@ The public-facing website is structured as a government-style statistical inform
 
 The rich demonstration dataset includes a 30-day national index series, 12 route indicators, 7 carrier indicators, 10 airport indicators, booking-horizon measures, regional summaries, a source registry, release archive and data catalogue. The replay layer is intentionally separate from future authorized live connectors.
 
-The public portal is now backed by a deterministic SQLite demo store. On first startup it seeds 18,000 synthetic fare observations plus source, release, alert, route, airline and airport tables. The browser ingestion console writes new observations into this local store and the website reads aggregate statistics back through FastAPI endpoints. Set `AIRINDEX_RUNTIME_DB` to move the demo store elsewhere. On Vercel, the demo store uses `/tmp` and is therefore not durable production storage.
+The public portal is now backed by a deterministic SQLite demo store. On first startup it seeds 18,000+ synthetic fare observations plus source, release, alert, route, airline and airport tables. The browser ingestion console writes new observations into this local store and the website reads aggregate statistics back through FastAPI endpoints. Set `AIRINDEX_RUNTIME_DB` to move the demo store elsewhere. On Vercel, the demo store uses `/tmp` and is therefore not durable production storage.
 
 
 
