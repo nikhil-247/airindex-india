@@ -25,7 +25,7 @@ REPLAY_PATH = ROOT / "data" / "demo" / "replay_source.json"
 PORTAL_ROOT = ROOT / "portal"
 STATIC_PATH = ROOT / "static"
 
-app = FastAPI(title="AirIndex India API", version="0.5.0")
+app = FastAPI(title="AirIndex India API", version="0.6.0")
 
 if STATIC_PATH.exists():
     app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
