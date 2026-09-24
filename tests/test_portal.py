@@ -36,7 +36,9 @@ def test_rich_portal_demo_dataset_is_available() -> None:
     payload = response.json()
 
     assert payload["status"] == "demo_replay"
-    assert payload["data_mode"] == "DEMO DATASET"
+    assert payload["data_mode"] == "DEMO DATABASE"
+    assert payload["storage_mode"] == "SQLite demo backend"
+    assert payload["observation_count"] >= 18000
     assert len(payload["daily_series"]) == 30
     assert len(payload["routes"]) == 12
     assert len(payload["airlines"]) == 7
@@ -50,3 +52,38 @@ def test_rich_portal_demo_dataset_is_available() -> None:
     assert len(payload["volatility"]) >= 5
     assert len(payload["alerts"]) >= 4
     assert any("MoSPI" in row["name"] for row in payload["source_registry"])
+
+
+def test_dynamic_stats_endpoints_are_database_backed() -> None:
+    assert client.get("/api/v1/stats/summary").status_code == 200
+    assert client.get("/api/v1/stats/routes").json()
+    assert client.get("/api/v1/stats/airlines").json()
+    assert client.get("/api/v1/stats/airports").json()
+    assert client.get("/api/v1/stats/sources").json()
+    assert client.get("/api/v1/stats/releases").json()
+    assert client.get("/api/v1/stats/alerts").json()
+    assert len(client.get("/api/v1/stats/observations?limit=5").json()) == 5
+
+
+def test_ingest_persists_demo_observation() -> None:
+    before = client.get("/api/v1/stats/summary").json()["observation_count"]
+    response = client.post(
+        "/api/v1/ingest/fare-observations",
+        json={
+            "observations": [
+                {
+                    "route": "DEL-BOM",
+                    "observed_at": "2026-09-25T10:00:00Z",
+                    "travel_date": "2026-10-25",
+                    "carrier_code": "6E",
+                    "total_fare": 5711,
+                    "advance_days": 30,
+                    "source": "test-browser",
+                }
+            ]
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["persisted_count"] == 1
+    after = client.get("/api/v1/stats/summary").json()["observation_count"]
+    assert after == before + 1
