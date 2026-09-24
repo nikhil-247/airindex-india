@@ -799,6 +799,8 @@ class DemoStore:
         self,
         route: str | None = None,
         carrier: str | None = None,
+        status: str | None = None,
+        anomaly: bool | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
         self.ensure_seeded()
@@ -810,6 +812,12 @@ class DemoStore:
         if carrier:
             filters.append("carrier_code = ?")
             values.append(carrier.upper())
+        if status:
+            filters.append("quality_status = ?")
+            values.append(status)
+        if anomaly is not None:
+            filters.append("anomaly_flag = ?")
+            values.append(int(anomaly))
         where = " WHERE " + " AND ".join(filters) if filters else ""
         values.append(min(max(limit, 1), 500))
         with self._connect() as c:
