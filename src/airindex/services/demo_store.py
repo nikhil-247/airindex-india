@@ -141,12 +141,21 @@ class DemoStore:
             seeded = connection.execute(
                 "SELECT value FROM meta WHERE key = 'seed_version'"
             ).fetchone()
-            if seeded:
+            if seeded and seeded[0] == 'portal-demo-v3':
                 return
+            if seeded and seeded[0] != 'portal-demo-v3':
+                connection.executescript(
+                    'DROP TABLE IF EXISTS observations; DROP TABLE IF EXISTS routes; '
+                    'DROP TABLE IF EXISTS airlines; DROP TABLE IF EXISTS airports; '
+                    'DROP TABLE IF EXISTS sources; DROP TABLE IF EXISTS releases; '
+                    'DROP TABLE IF EXISTS alerts; DROP TABLE IF EXISTS daily_index; '
+                    'DROP TABLE IF EXISTS meta;'
+                )
+                connection.executescript(SCHEMA)
             payload = json.loads(DEMO_JSON.read_text(encoding="utf-8"))
             self._seed(connection, payload)
             connection.execute(
-                "INSERT INTO meta(key, value) VALUES('seed_version', 'portal-demo-v2')"
+                "INSERT INTO meta(key, value) VALUES('seed_version', 'portal-demo-v3')"
             )
             seeded_count = int(connection.execute("SELECT COUNT(*) FROM observations").fetchone()[0])
             connection.execute(
@@ -655,6 +664,14 @@ class DemoStore:
         payload["airports"] = self._dynamic_airports()
         payload["national_index"] = round(self._national_index(payload["routes"]), 4)
         payload["change_percent"] = round(payload["national_index"] - 100.0, 4)
+        weighted_avg_fare = sum(
+            float(row["weight"]) * float(row["avg_fare"]) for row in payload["routes"]
+        )
+        payload["market_pulse"][0]["value"] = payload["national_index"]
+        payload["market_pulse"][0]["change"] = payload["change_percent"]
+        payload["market_pulse"][2]["value"] = round(weighted_avg_fare, 2)
+        payload["market_pulse"][4]["value"] = round(payload["quality_avg"] * 100, 2)
+        payload["market_pulse"][5]["value"] = payload["anomaly_rate_pct"]
         payload["source_registry"] = [
             {
                 "name": row["name"],
