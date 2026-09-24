@@ -11,6 +11,8 @@ def test_public_portal_pages_are_available() -> None:
         "/dashboard",
         "/routes",
         "/airlines",
+        "/intelligence",
+        "/sources",
         "/airports",
         "/quality",
         "/methodology",
@@ -42,3 +44,8 @@ def test_rich_portal_demo_dataset_is_available() -> None:
     assert len(payload["source_registry"]) >= 4
     assert len(payload["catalogue"]) >= 6
     assert payload["national_index"] > 100
+    assert len(payload["market_pulse"]) >= 5
+    assert len(payload["fare_distribution"]) >= 5
+    assert len(payload["volatility"]) >= 5
+    assert len(payload["alerts"]) >= 4
+    assert any("MoSPI" in row["name"] for row in payload["source_registry"])
