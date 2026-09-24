@@ -335,21 +335,31 @@ class DemoStore:
                         ),
                     )
                     anomaly = int(fare > avg_fare * 1.28 or fare < avg_fare * 0.72)
-                    observations.append(
-                        (
-                            route["route"],
-                            carrier,
-                            observed_at.isoformat(),
-                            (observed_date + timedelta(days=advance_days)).isoformat(),
-                            advance_days,
-                            round(fare, 2),
-                            "INR",
-                            "synthetic-demo-replay",
-                            round(quality, 4),
-                            "flagged" if anomaly else "accepted",
-                            anomaly,
-                        )
+                    status = (
+                        "rejected"
+                        if day_index % 9 == 0 and sample == 0
+                        else ("flagged" if anomaly else "accepted")
                     )
+                    observation = (
+                        route["route"],
+                        carrier,
+                        observed_at.isoformat(),
+                        (observed_date + timedelta(days=advance_days)).isoformat(),
+                        advance_days,
+                        round(fare, 2),
+                        "INR",
+                        "synthetic-demo-replay",
+                        round(quality, 4),
+                        status,
+                        anomaly if status != "rejected" else 0,
+                    )
+                    observations.append(observation)
+                    if (
+                        day_index == 0
+                        and sample == 1
+                        and route["route"] == route_rows[0]["route"]
+                    ):
+                        observations.append(observation)
 
         connection.executemany(
             """
