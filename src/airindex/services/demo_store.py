@@ -158,7 +158,9 @@ class DemoStore:
             connection.execute(
                 "INSERT INTO meta(key, value) VALUES('seed_version', 'portal-demo-v3')"
             )
-            seeded_count = int(connection.execute("SELECT COUNT(*) FROM observations").fetchone()[0])
+            seeded_count = int(
+                connection.execute("SELECT COUNT(*) FROM observations").fetchone()[0]
+            )
             connection.execute(
                 "INSERT INTO meta(key, value) VALUES('initial_observation_count', ?)",
                 (str(seeded_count),),
@@ -325,7 +327,13 @@ class DemoStore:
                         * horizon_effect
                         * rng.uniform(0.91, 1.09),
                     )
-                    quality = max(0.72, min(0.995, float(route["quality"]) / 100 + rng.uniform(-0.025, 0.02)))
+                    quality = max(
+                        0.72,
+                        min(
+                            0.995,
+                            float(route["quality"]) / 100 + rng.uniform(-0.025, 0.02),
+                        ),
+                    )
                     anomaly = int(fare > avg_fare * 1.28 or fare < avg_fare * 0.72)
                     observations.append(
                         (
@@ -424,7 +432,9 @@ class DemoStore:
                 SELECT AVG(o.total_fare) FROM observations o WHERE o.carrier_code = airlines.code
             ), avg_fare),
             quality = COALESCE((
-                SELECT AVG(o.quality_score) * 100 FROM observations o WHERE o.carrier_code = airlines.code
+                SELECT AVG(o.quality_score) * 100
+                FROM observations o
+                WHERE o.carrier_code = airlines.code
             ), quality)
             """
         )
@@ -538,8 +548,14 @@ class DemoStore:
                     "SELECT COUNT(*) FROM observations WHERE quality_status = 'accepted'"
                 ).fetchone()[0]
             )
-            anomalies = int(c.execute("SELECT COUNT(*) FROM observations WHERE anomaly_flag = 1").fetchone()[0])
-            quality = float(c.execute("SELECT AVG(quality_score) FROM observations").fetchone()[0] or 0)
+            anomalies = int(
+                c.execute(
+                    "SELECT COUNT(*) FROM observations WHERE anomaly_flag = 1"
+                ).fetchone()[0]
+            )
+            quality = float(
+                c.execute("SELECT AVG(quality_score) FROM observations").fetchone()[0] or 0
+            )
             duplicate_like = int(
                 c.execute(
                     """
@@ -583,7 +599,9 @@ class DemoStore:
                 ).fetchall()
             elif search and table == "airlines":
                 rows = c.execute(
-                    "SELECT * FROM airlines WHERE name LIKE ? OR code LIKE ? ORDER BY index_value DESC",
+                    "SELECT * FROM airlines "
+                    "WHERE name LIKE ? OR code LIKE ? "
+                    "ORDER BY index_value DESC",
                     (f"%{search}%", f"%{search.upper()}%"),
                 ).fetchall()
             else:
