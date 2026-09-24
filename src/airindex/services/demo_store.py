@@ -584,7 +584,11 @@ class DemoStore:
                 ).fetchone()[0]
             )
             quality = float(
-                c.execute("SELECT AVG(quality_score) FROM observations").fetchone()[0] or 0
+                c.execute(
+                    "SELECT AVG(quality_score) FROM observations "
+                    "WHERE quality_status = 'accepted'"
+                ).fetchone()[0]
+                or 0
             )
             duplicate_like = int(
                 c.execute(
