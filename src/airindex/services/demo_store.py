@@ -428,6 +428,92 @@ class DemoStore:
                 (int(count), code),
             )
 
+    def _reference_payload(self) -> dict[str, Any]:
+        return json.loads(DEMO_JSON.read_text(encoding="utf-8"))
+
+    def _dynamic_routes(self) -> list[dict[str, Any]]:
+        baseline = {
+            item["route"]: float(item["avg_fare"])
+            for item in self._reference_payload()["routes"]
+        }
+        rows = self.all_rows("routes")
+        dynamic: list[dict[str, Any]] = []
+        for row in rows:
+            base_fare = baseline.get(row["route"], row["avg_fare"])
+            factor = row["avg_fare"] / base_fare if base_fare else 1.0
+            index_value = row["index_value"] * factor
+            dynamic.append(
+                {
+                    "route": row["route"],
+                    "weight": row["weight"],
+                    "index": round(index_value, 4),
+                    "change_percent": round(index_value - 100.0, 4),
+                    "avg_fare": round(row["avg_fare"], 2),
+                    "min_fare": round(row["min_fare"], 2),
+                    "p90_fare": round(row["p90_fare"], 2),
+                    "observations": row["observations"],
+                    "quality": round(row["quality"], 2),
+                }
+            )
+        return dynamic
+
+    def _dynamic_airlines(self) -> list[dict[str, Any]]:
+        baseline = {
+            item["code"]: float(item["avg_fare"])
+            for item in self._reference_payload()["airlines"]
+        }
+        rows = self.all_rows("airlines")
+        dynamic: list[dict[str, Any]] = []
+        for row in rows:
+            base_fare = baseline.get(row["code"], row["avg_fare"])
+            factor = row["avg_fare"] / base_fare if base_fare else 1.0
+            index_value = row["index_value"] * factor
+            dynamic.append(
+                {
+                    "code": row["code"],
+                    "name": row["name"],
+                    "index": round(index_value, 4),
+                    "change_percent": round(index_value - 100.0, 4),
+                    "avg_fare": round(row["avg_fare"], 2),
+                    "observations": row["observations"],
+                    "quality": round(row["quality"], 2),
+                    "status": row["status"],
+                }
+            )
+        return dynamic
+
+    def _dynamic_airports(self) -> list[dict[str, Any]]:
+        baseline = {
+            item["code"]: float(item["avg_fare"])
+            for item in self._reference_payload()["airports"]
+        }
+        rows = self.all_rows("airports")
+        dynamic: list[dict[str, Any]] = []
+        for row in rows:
+            base_fare = baseline.get(row["code"], row["avg_fare"])
+            factor = row["avg_fare"] / base_fare if base_fare else 1.0
+            index_value = row["index_value"] * factor
+            dynamic.append(
+                {
+                    "code": row["code"],
+                    "city": row["city"],
+                    "state": row["state"],
+                    "index": round(index_value, 4),
+                    "change_percent": round(index_value - 100.0, 4),
+                    "avg_fare": round(row["avg_fare"], 2),
+                    "observations": row["observations"],
+                    "quality": round(row["quality"], 2),
+                }
+            )
+        return dynamic
+
+    @staticmethod
+    def _national_index(routes: list[dict[str, Any]]) -> float:
+        weight_total = sum(float(row["weight"]) for row in routes)
+        if not weight_total:
+            return 100.0
+        return sum(float(row["weight"]) * float(row["index"]) for row in routes) / weight_total
+
     def summary(self) -> dict[str, Any]:
         self.ensure_seeded()
         with self._connect() as c:
@@ -461,6 +547,7 @@ class DemoStore:
                 "route_count": int(c.execute("SELECT COUNT(*) FROM routes").fetchone()[0]),
                 "airline_count": int(c.execute("SELECT COUNT(*) FROM airlines").fetchone()[0]),
                 "airport_count": int(c.execute("SELECT COUNT(*) FROM airports").fetchone()[0]),
+                "national_index": round(self._national_index(self._dynamic_routes()), 4),
             }
 
     def all_rows(self, table: str, search: str | None = None) -> list[dict[str, Any]]:
@@ -552,46 +639,11 @@ class DemoStore:
         payload["distinct_routes"] = stats["route_count"]
         payload["distinct_airports"] = stats["airport_count"]
         payload["distinct_carriers"] = stats["airline_count"]
-        payload["routes"] = [
-            {
-                "route": row["route"],
-                "weight": row["weight"],
-                "index": row["index_value"],
-                "change_percent": row["change_percent"],
-                "avg_fare": row["avg_fare"],
-                "min_fare": row["min_fare"],
-                "p90_fare": row["p90_fare"],
-                "observations": row["observations"],
-                "quality": row["quality"],
-            }
-            for row in self.all_rows("routes")
-        ]
-        payload["airlines"] = [
-            {
-                "code": row["code"],
-                "name": row["name"],
-                "index": row["index_value"],
-                "change_percent": row["change_percent"],
-                "avg_fare": row["avg_fare"],
-                "observations": row["observations"],
-                "quality": row["quality"],
-                "status": row["status"],
-            }
-            for row in self.all_rows("airlines")
-        ]
-        payload["airports"] = [
-            {
-                "code": row["code"],
-                "city": row["city"],
-                "state": row["state"],
-                "index": row["index_value"],
-                "change_percent": row["change_percent"],
-                "avg_fare": row["avg_fare"],
-                "observations": row["observations"],
-                "quality": row["quality"],
-            }
-            for row in self.all_rows("airports")
-        ]
+        payload["routes"] = self._dynamic_routes()
+        payload["airlines"] = self._dynamic_airlines()
+        payload["airports"] = self._dynamic_airports()
+        payload["national_index"] = round(self._national_index(payload["routes"]), 4)
+        payload["change_percent"] = round(payload["national_index"] - 100.0, 4)
         payload["source_registry"] = [
             {
                 "name": row["name"],
