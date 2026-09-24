@@ -10,6 +10,7 @@ def test_public_portal_pages_are_available() -> None:
         "/",
         "/dashboard",
         "/routes",
+        "/compare",
         "/airlines",
         "/intelligence",
         "/sources",
