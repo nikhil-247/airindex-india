@@ -696,6 +696,7 @@ class DemoStore:
                 )
                 inserted += 1
             self._refresh_aggregates(c)
+            c.commit()
             current_routes = self._dynamic_routes()
             current_index = self._national_index(current_routes)
             total_observations = int(
