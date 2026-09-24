@@ -327,6 +327,8 @@ class DemoStore:
                         * horizon_effect
                         * rng.uniform(0.91, 1.09),
                     )
+                    if sample == 47:
+                        fare *= 1.35
                     quality = max(
                         0.72,
                         min(
