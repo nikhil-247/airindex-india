@@ -148,6 +148,11 @@ class DemoStore:
             connection.execute(
                 "INSERT INTO meta(key, value) VALUES('seed_version', 'portal-demo-v2')"
             )
+            seeded_count = int(connection.execute("SELECT COUNT(*) FROM observations").fetchone()[0])
+            connection.execute(
+                "INSERT INTO meta(key, value) VALUES('initial_observation_count', ?)",
+                (str(seeded_count),),
+            )
             connection.commit()
 
     def _seed(self, connection: sqlite3.Connection, payload: dict[str, Any]) -> None:
@@ -536,8 +541,13 @@ class DemoStore:
                     """
                 ).fetchone()[0]
             )
+            initial_seed_row = c.execute(
+                "SELECT value FROM meta WHERE key = 'initial_observation_count'"
+            ).fetchone()
+            initial_seed = int(initial_seed_row["value"]) if initial_seed_row else total
             return {
                 "observation_count": total,
+                "initial_observation_count": initial_seed,
                 "accepted_count": accepted,
                 "rejected_count": total - accepted,
                 "anomaly_count": anomalies,
@@ -630,6 +640,7 @@ class DemoStore:
         payload["data_mode"] = "DEMO DATABASE"
         payload["storage_mode"] = "SQLite demo backend"
         payload["generated_observations"] = stats["observation_count"]
+        payload["initial_observation_count"] = stats["initial_observation_count"]
         payload["observation_count"] = stats["observation_count"]
         payload["accepted_count"] = stats["accepted_count"]
         payload["rejected_count"] = stats["rejected_count"]
