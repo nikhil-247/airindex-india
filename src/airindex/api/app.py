@@ -128,6 +128,11 @@ def routes_page() -> FileResponse:
     return _page("routes")
 
 
+@app.get("/compare", include_in_schema=False)
+def compare_page() -> FileResponse:
+    return _page("compare")
+
+
 @app.get("/airlines", include_in_schema=False)
 def airlines_page() -> FileResponse:
     return _page("airlines")
