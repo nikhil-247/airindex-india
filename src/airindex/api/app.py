@@ -133,6 +133,16 @@ def airlines_page() -> FileResponse:
     return _page("airlines")
 
 
+@app.get("/intelligence", include_in_schema=False)
+def intelligence_page() -> FileResponse:
+    return _page("intelligence")
+
+
+@app.get("/sources", include_in_schema=False)
+def sources_page() -> FileResponse:
+    return _page("sources")
+
+
 @app.get("/airports", include_in_schema=False)
 def airports_page() -> FileResponse:
     return _page("airports")
