@@ -8,6 +8,11 @@ AirIndex is designed as an auditable measurement pipeline: it turns permitted ai
 
 ## Current prototype
 
+The public-facing website is structured as a government-style statistical information portal (demonstration only), with Home, Market Dashboard, Routes, Airlines, Airports, Data Quality, Methodology, Data Catalogue, Releases, API & Downloads, and About/Governance sections.
+
+The rich demonstration dataset includes a 30-day national index series, 12 route indicators, 7 carrier indicators, 10 airport indicators, booking-horizon measures, regional summaries, a source registry, release archive and data catalogue. The replay layer is intentionally separate from future authorized live connectors.
+
+
 The repository now includes a multi-page product website with Home, Dashboard, Route Explorer, Quality & Audit, Methodology, Pipeline controls and FastAPI docs. All pages use the same-origin API and the committed replay dataset for a deterministic demo.
 
 
