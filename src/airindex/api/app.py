@@ -261,9 +261,17 @@ def stats_series() -> list[dict[str, Any]]:
 def stats_observations(
     route: str | None = None,
     carrier: str | None = None,
+    status: str | None = None,
+    anomaly: bool | None = None,
     limit: int = 100,
 ) -> list[dict[str, Any]]:
-    return demo_store.observation_detail(route=route, carrier=carrier, limit=limit)
+    return demo_store.observation_detail(
+        route=route,
+        carrier=carrier,
+        status=status,
+        anomaly=anomaly,
+        limit=limit,
+    )
 
 
 @app.get("/api/v1/demo/index")
