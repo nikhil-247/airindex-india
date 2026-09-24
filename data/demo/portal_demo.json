@@ -1,0 +1,695 @@
+{
+  "status": "demo_replay",
+  "generated_at": "2026-09-25T10:00:00+05:30",
+  "data_mode": "DEMO DATASET",
+  "portal_version": "0.6.0",
+  "methodology_version": "0.1.0",
+  "base_level": 100,
+  "reference_period": "27 Aug 2026",
+  "national_index": 104.31,
+  "change_percent": 4.31,
+  "thirty_day_change_percent": 5.81,
+  "observation_count": 147830,
+  "accepted_count": 139442,
+  "rejected_count": 8388,
+  "distinct_routes": 68,
+  "distinct_airports": 42,
+  "distinct_carriers": 7,
+  "quality_avg": 0.944,
+  "anomaly_rate_pct": 3.6,
+  "daily_series": [
+    {
+      "date": "2026-08-27",
+      "index": 98.65,
+      "change_percent": -1.35
+    },
+    {
+      "date": "2026-08-28",
+      "index": 98.99,
+      "change_percent": -1.01
+    },
+    {
+      "date": "2026-08-29",
+      "index": 99.31,
+      "change_percent": -0.69
+    },
+    {
+      "date": "2026-08-30",
+      "index": 99.6,
+      "change_percent": -0.4
+    },
+    {
+      "date": "2026-08-31",
+      "index": 99.83,
+      "change_percent": -0.17
+    },
+    {
+      "date": "2026-09-01",
+      "index": 100.28,
+      "change_percent": 0.28
+    },
+    {
+      "date": "2026-09-02",
+      "index": 100.12,
+      "change_percent": 0.12
+    },
+    {
+      "date": "2026-09-03",
+      "index": 100.2,
+      "change_percent": 0.2
+    },
+    {
+      "date": "2026-09-04",
+      "index": 100.24,
+      "change_percent": 0.24
+    },
+    {
+      "date": "2026-09-05",
+      "index": 100.28,
+      "change_percent": 0.28
+    },
+    {
+      "date": "2026-09-06",
+      "index": 100.33,
+      "change_percent": 0.33
+    },
+    {
+      "date": "2026-09-07",
+      "index": 100.4,
+      "change_percent": 0.4
+    },
+    {
+      "date": "2026-09-08",
+      "index": 100.8,
+      "change_percent": 0.8
+    },
+    {
+      "date": "2026-09-09",
+      "index": 100.7,
+      "change_percent": 0.7
+    },
+    {
+      "date": "2026-09-10",
+      "index": 100.94,
+      "change_percent": 0.94
+    },
+    {
+      "date": "2026-09-11",
+      "index": 101.22,
+      "change_percent": 1.22
+    },
+    {
+      "date": "2026-09-12",
+      "index": 101.54,
+      "change_percent": 1.54
+    },
+    {
+      "date": "2026-09-13",
+      "index": 101.89,
+      "change_percent": 1.89
+    },
+    {
+      "date": "2026-09-14",
+      "index": 102.23,
+      "change_percent": 2.23
+    },
+    {
+      "date": "2026-09-15",
+      "index": 102.83,
+      "change_percent": 2.83
+    },
+    {
+      "date": "2026-09-16",
+      "index": 102.83,
+      "change_percent": 2.83
+    },
+    {
+      "date": "2026-09-17",
+      "index": 103.06,
+      "change_percent": 3.06
+    },
+    {
+      "date": "2026-09-18",
+      "index": 103.23,
+      "change_percent": 3.23
+    },
+    {
+      "date": "2026-09-19",
+      "index": 103.35,
+      "change_percent": 3.35
+    },
+    {
+      "date": "2026-09-20",
+      "index": 103.42,
+      "change_percent": 3.42
+    },
+    {
+      "date": "2026-09-21",
+      "index": 103.47,
+      "change_percent": 3.47
+    },
+    {
+      "date": "2026-09-22",
+      "index": 103.78,
+      "change_percent": 3.78
+    },
+    {
+      "date": "2026-09-23",
+      "index": 103.55,
+      "change_percent": 3.55
+    },
+    {
+      "date": "2026-09-24",
+      "index": 103.63,
+      "change_percent": 3.63
+    },
+    {
+      "date": "2026-09-25",
+      "index": 103.75,
+      "change_percent": 3.75
+    }
+  ],
+  "routes": [
+    {
+      "route": "DEL-BOM",
+      "weight": 0.14,
+      "index": 104.8,
+      "change_percent": 4.8,
+      "avg_fare": 6120,
+      "min_fare": 4200,
+      "p90_fare": 8200,
+      "observations": 1512,
+      "quality": 96.4
+    },
+    {
+      "route": "DEL-BLR",
+      "weight": 0.13,
+      "index": 106.2,
+      "change_percent": 6.2,
+      "avg_fare": 6880,
+      "min_fare": 4600,
+      "p90_fare": 9400,
+      "observations": 1434,
+      "quality": 95.2
+    },
+    {
+      "route": "BOM-BLR",
+      "weight": 0.11,
+      "index": 103.9,
+      "change_percent": 3.9,
+      "avg_fare": 5480,
+      "min_fare": 3900,
+      "p90_fare": 7600,
+      "observations": 1278,
+      "quality": 94.7
+    },
+    {
+      "route": "DEL-HYD",
+      "weight": 0.1,
+      "index": 105.4,
+      "change_percent": 5.4,
+      "avg_fare": 5750,
+      "min_fare": 4100,
+      "p90_fare": 7900,
+      "observations": 1200,
+      "quality": 93.8
+    },
+    {
+      "route": "DEL-MAA",
+      "weight": 0.1,
+      "index": 104.1,
+      "change_percent": 4.1,
+      "avg_fare": 6020,
+      "min_fare": 4300,
+      "p90_fare": 8300,
+      "observations": 1200,
+      "quality": 94.4
+    },
+    {
+      "route": "DEL-CCU",
+      "weight": 0.09,
+      "index": 102.7,
+      "change_percent": 2.7,
+      "avg_fare": 6480,
+      "min_fare": 4700,
+      "p90_fare": 9100,
+      "observations": 1122,
+      "quality": 92.9
+    },
+    {
+      "route": "BOM-HYD",
+      "weight": 0.08,
+      "index": 105.8,
+      "change_percent": 5.8,
+      "avg_fare": 4920,
+      "min_fare": 3500,
+      "p90_fare": 7100,
+      "observations": 1044,
+      "quality": 93.6
+    },
+    {
+      "route": "DEL-GOI",
+      "weight": 0.07,
+      "index": 108.1,
+      "change_percent": 8.1,
+      "avg_fare": 7310,
+      "min_fare": 5200,
+      "p90_fare": 10400,
+      "observations": 966,
+      "quality": 91.8
+    },
+    {
+      "route": "BOM-GOI",
+      "weight": 0.06,
+      "index": 106.6,
+      "change_percent": 6.6,
+      "avg_fare": 6840,
+      "min_fare": 4700,
+      "p90_fare": 9900,
+      "observations": 888,
+      "quality": 92.5
+    },
+    {
+      "route": "DEL-AMD",
+      "weight": 0.05,
+      "index": 101.9,
+      "change_percent": 1.9,
+      "avg_fare": 4360,
+      "min_fare": 3200,
+      "p90_fare": 6200,
+      "observations": 810,
+      "quality": 96.1
+    },
+    {
+      "route": "BOM-COK",
+      "weight": 0.04,
+      "index": 103.3,
+      "change_percent": 3.3,
+      "avg_fare": 7210,
+      "min_fare": 5000,
+      "p90_fare": 10300,
+      "observations": 732,
+      "quality": 90.9
+    },
+    {
+      "route": "BLR-COK",
+      "weight": 0.03,
+      "index": 102.4,
+      "change_percent": 2.4,
+      "avg_fare": 4580,
+      "min_fare": 3300,
+      "p90_fare": 6700,
+      "observations": 654,
+      "quality": 91.6
+    }
+  ],
+  "airlines": [
+    {
+      "code": "AI",
+      "name": "Air India",
+      "index": 103.7,
+      "change_percent": 3.7,
+      "avg_fare": 6420,
+      "observations": 12840,
+      "quality": 94.8,
+      "status": "DEMO / CONNECTOR READY"
+    },
+    {
+      "code": "IX",
+      "name": "Air India Express",
+      "index": 104.9,
+      "change_percent": 4.9,
+      "avg_fare": 5180,
+      "observations": 10460,
+      "quality": 93.7,
+      "status": "DEMO / CONNECTOR READY"
+    },
+    {
+      "code": "6E",
+      "name": "IndiGo",
+      "index": 103.8,
+      "change_percent": 3.8,
+      "avg_fare": 5870,
+      "observations": 22150,
+      "quality": 96.1,
+      "status": "DEMO / CONNECTOR READY"
+    },
+    {
+      "code": "QP",
+      "name": "Akasa Air",
+      "index": 105.6,
+      "change_percent": 5.6,
+      "avg_fare": 5360,
+      "observations": 7340,
+      "quality": 92.8,
+      "status": "DEMO / CONNECTOR READY"
+    },
+    {
+      "code": "SG",
+      "name": "SpiceJet",
+      "index": 106.3,
+      "change_percent": 6.3,
+      "avg_fare": 4910,
+      "observations": 6120,
+      "quality": 91.4,
+      "status": "DEMO / CONNECTOR READY"
+    },
+    {
+      "code": "9I",
+      "name": "Alliance Air",
+      "index": 102.8,
+      "change_percent": 2.8,
+      "avg_fare": 4540,
+      "observations": 2140,
+      "quality": 90.8,
+      "status": "DEMO / CONNECTOR READY"
+    },
+    {
+      "code": "DEMO",
+      "name": "Illustrative Connector",
+      "index": 100,
+      "change_percent": 0,
+      "avg_fare": 5600,
+      "observations": 980,
+      "quality": 98,
+      "status": "DEMO / CONNECTOR READY"
+    }
+  ],
+  "airports": [
+    {
+      "code": "DEL",
+      "city": "Delhi",
+      "state": "Delhi",
+      "index": 105.1,
+      "change_percent": 5.1,
+      "avg_fare": 6210,
+      "observations": 18240,
+      "quality": 97.1
+    },
+    {
+      "code": "BOM",
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "index": 104.6,
+      "change_percent": 4.6,
+      "avg_fare": 5980,
+      "observations": 16820,
+      "quality": 96.2
+    },
+    {
+      "code": "BLR",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "index": 104.3,
+      "change_percent": 4.3,
+      "avg_fare": 5730,
+      "observations": 15490,
+      "quality": 95.8
+    },
+    {
+      "code": "HYD",
+      "city": "Hyderabad",
+      "state": "Telangana",
+      "index": 103.8,
+      "change_percent": 3.8,
+      "avg_fare": 5140,
+      "observations": 11180,
+      "quality": 95.1
+    },
+    {
+      "code": "MAA",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "index": 103.2,
+      "change_percent": 3.2,
+      "avg_fare": 5510,
+      "observations": 10320,
+      "quality": 94.7
+    },
+    {
+      "code": "CCU",
+      "city": "Kolkata",
+      "state": "West Bengal",
+      "index": 102.9,
+      "change_percent": 2.9,
+      "avg_fare": 6020,
+      "observations": 9640,
+      "quality": 93.6
+    },
+    {
+      "code": "GOI",
+      "city": "Goa",
+      "state": "Goa",
+      "index": 107.5,
+      "change_percent": 7.5,
+      "avg_fare": 6850,
+      "observations": 8420,
+      "quality": 91.9
+    },
+    {
+      "code": "AMD",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "index": 101.8,
+      "change_percent": 1.8,
+      "avg_fare": 4310,
+      "observations": 7330,
+      "quality": 95.9
+    },
+    {
+      "code": "COK",
+      "city": "Kochi",
+      "state": "Kerala",
+      "index": 103.6,
+      "change_percent": 3.6,
+      "avg_fare": 5480,
+      "observations": 7020,
+      "quality": 93.8
+    },
+    {
+      "code": "PNQ",
+      "city": "Pune",
+      "state": "Maharashtra",
+      "index": 102.5,
+      "change_percent": 2.5,
+      "avg_fare": 4870,
+      "observations": 6680,
+      "quality": 92.7
+    }
+  ],
+  "lead_time": [
+    {
+      "window": "T+1",
+      "index": 105.8,
+      "observations": 2140,
+      "quality": 0.91
+    },
+    {
+      "window": "T+7",
+      "index": 104.9,
+      "observations": 3960,
+      "quality": 0.93
+    },
+    {
+      "window": "T+15",
+      "index": 103.8,
+      "observations": 3120,
+      "quality": 0.95
+    },
+    {
+      "window": "T+30",
+      "index": 102.7,
+      "observations": 2260,
+      "quality": 0.96
+    },
+    {
+      "window": "T+45",
+      "index": 101.9,
+      "observations": 1560,
+      "quality": 0.97
+    }
+  ],
+  "regions": [
+    {
+      "region": "North",
+      "index": 104.7,
+      "change_percent": 4.7,
+      "observations": 38820
+    },
+    {
+      "region": "West",
+      "index": 105.1,
+      "change_percent": 5.1,
+      "observations": 35640
+    },
+    {
+      "region": "South",
+      "index": 104,
+      "change_percent": 4,
+      "observations": 42130
+    },
+    {
+      "region": "East",
+      "index": 102.9,
+      "change_percent": 2.9,
+      "observations": 20880
+    }
+  ],
+  "source_registry": [
+    {
+      "name": "Air India",
+      "type": "Airline direct",
+      "status": "CONNECTOR READY",
+      "next_step": "Authorized feed / agreed API access",
+      "last_observation": "Demo"
+    },
+    {
+      "name": "IndiGo",
+      "type": "Airline direct",
+      "status": "CONNECTOR READY",
+      "next_step": "Authorized feed / agreed API access",
+      "last_observation": "Demo"
+    },
+    {
+      "name": "Airline & GDS feeds",
+      "type": "Structured fare feed",
+      "status": "ADAPTER READY",
+      "next_step": "Credentialed partner integration",
+      "last_observation": "Demo"
+    },
+    {
+      "name": "Public reference datasets",
+      "type": "Open statistical reference",
+      "status": "ACTIVE DEMO",
+      "next_step": "Map validated reference series",
+      "last_observation": "Demo"
+    },
+    {
+      "name": "Airport metadata",
+      "type": "Reference metadata",
+      "status": "ACTIVE DEMO",
+      "next_step": "Refresh airport registry",
+      "last_observation": "Demo"
+    }
+  ],
+  "releases": [
+    {
+      "date": "25 Sep 2026",
+      "title": "AirIndex India — Demonstration Statistical Release 0.6",
+      "type": "Statistical release",
+      "status": "Demo"
+    },
+    {
+      "date": "18 Sep 2026",
+      "title": "Route basket and weighting framework",
+      "type": "Methodology note",
+      "status": "Demo"
+    },
+    {
+      "date": "11 Sep 2026",
+      "title": "Observation quality and anomaly framework",
+      "type": "Quality bulletin",
+      "status": "Demo"
+    },
+    {
+      "date": "04 Sep 2026",
+      "title": "Booking-horizon stratification specification",
+      "type": "Technical note",
+      "status": "Demo"
+    },
+    {
+      "date": "28 Aug 2026",
+      "title": "Prototype source and provenance registry",
+      "type": "Data note",
+      "status": "Demo"
+    },
+    {
+      "date": "21 Aug 2026",
+      "title": "Airfare Price Index prototype baseline",
+      "type": "Initial release",
+      "status": "Demo"
+    }
+  ],
+  "catalogue": [
+    {
+      "id": "AIX-NAT-01",
+      "name": "National Experimental Airfare Price Index",
+      "frequency": "Daily",
+      "granularity": "National",
+      "format": "JSON / CSV",
+      "coverage": "India",
+      "status": "Demo replay"
+    },
+    {
+      "id": "AIX-RTE-01",
+      "name": "Route-level Airfare Index",
+      "frequency": "Daily",
+      "granularity": "Route",
+      "format": "JSON / CSV",
+      "coverage": "68 demo routes",
+      "status": "Demo replay"
+    },
+    {
+      "id": "AIX-ALN-01",
+      "name": "Airline Fare Indicators",
+      "frequency": "Daily",
+      "granularity": "Carrier",
+      "format": "JSON / CSV",
+      "coverage": "7 demo carriers",
+      "status": "Demo replay"
+    },
+    {
+      "id": "AIX-APT-01",
+      "name": "Airport Fare Indicators",
+      "frequency": "Daily",
+      "granularity": "Airport",
+      "format": "JSON / CSV",
+      "coverage": "42 demo airports",
+      "status": "Demo replay"
+    },
+    {
+      "id": "AIX-LTM-01",
+      "name": "Booking-horizon indicators",
+      "frequency": "Daily",
+      "granularity": "Lead window",
+      "format": "JSON / CSV",
+      "coverage": "T+1 to T+45",
+      "status": "Demo replay"
+    },
+    {
+      "id": "AIX-QC-01",
+      "name": "Observation Quality Audit",
+      "frequency": "Per run",
+      "granularity": "Observation",
+      "format": "JSON",
+      "coverage": "Validation + anomaly flags",
+      "status": "Demo replay"
+    },
+    {
+      "id": "AIX-SRC-01",
+      "name": "Source Registry",
+      "frequency": "On update",
+      "granularity": "Source",
+      "format": "JSON",
+      "coverage": "Connector registry",
+      "status": "Adapter ready"
+    },
+    {
+      "id": "AIX-MET-01",
+      "name": "Methodology & Metadata",
+      "frequency": "On release",
+      "granularity": "Documentation",
+      "format": "HTML / PDF",
+      "coverage": "National",
+      "status": "Published"
+    }
+  ],
+  "insights": [
+    "The national demo index is 104.31, equivalent to +4.31% from the base level of 100.",
+    "The current replay shows the strongest route movement on DEL-GOI at 108.10.",
+    "T+1 observations show the highest demo index among the five booking-horizon buckets.",
+    "West-region route groups have the highest regional demo index in this replay.",
+    "Average observation quality remains above 94% across the demo dataset.",
+    "All airline connectors are displayed as integration-ready placeholders, not live feeds."
+  ]
+}
