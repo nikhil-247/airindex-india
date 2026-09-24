@@ -538,10 +538,58 @@ class DemoStore:
         payload["distinct_routes"] = stats["route_count"]
         payload["distinct_airports"] = stats["airport_count"]
         payload["distinct_carriers"] = stats["airline_count"]
-        payload["routes"] = self.all_rows("routes")
-        payload["airlines"] = self.all_rows("airlines")
-        payload["airports"] = self.all_rows("airports")
-        payload["source_registry"] = self.all_rows("sources")
+        payload["routes"] = [
+            {
+                "route": row["route"],
+                "weight": row["weight"],
+                "index": row["index_value"],
+                "change_percent": row["change_percent"],
+                "avg_fare": row["avg_fare"],
+                "min_fare": row["min_fare"],
+                "p90_fare": row["p90_fare"],
+                "observations": row["observations"],
+                "quality": row["quality"],
+            }
+            for row in self.all_rows("routes")
+        ]
+        payload["airlines"] = [
+            {
+                "code": row["code"],
+                "name": row["name"],
+                "index": row["index_value"],
+                "change_percent": row["change_percent"],
+                "avg_fare": row["avg_fare"],
+                "observations": row["observations"],
+                "quality": row["quality"],
+                "status": row["status"],
+            }
+            for row in self.all_rows("airlines")
+        ]
+        payload["airports"] = [
+            {
+                "code": row["code"],
+                "city": row["city"],
+                "state": row["state"],
+                "index": row["index_value"],
+                "change_percent": row["change_percent"],
+                "avg_fare": row["avg_fare"],
+                "observations": row["observations"],
+                "quality": row["quality"],
+            }
+            for row in self.all_rows("airports")
+        ]
+        payload["source_registry"] = [
+            {
+                "name": row["name"],
+                "type": row["source_type"],
+                "status": row["status"],
+                "official": bool(row["official"]),
+                "url": row["url"],
+                "role": row["role"],
+                "note": row["note"],
+            }
+            for row in self.all_rows("sources")
+        ]
         payload["releases"] = [
             {
                 "date": row["release_date"],
@@ -560,7 +608,15 @@ class DemoStore:
             }
             for row in self.all_rows("alerts")
         ]
-        payload["daily_series"] = self.all_rows("daily_index")
+        payload["daily_series"] = [
+            {
+                "date": row["index_date"],
+                "index": row["index_value"],
+                "change_percent": row["change_percent"],
+                "observation_count": row["observation_count"],
+            }
+            for row in self.all_rows("daily_index")
+        ]
         return payload
 
     def observation_detail(
