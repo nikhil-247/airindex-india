@@ -404,16 +404,28 @@ class DemoStore:
             """
             UPDATE routes
             SET observations = (
-                SELECT COUNT(*) FROM observations o WHERE o.route = routes.route
+                SELECT COUNT(*)
+                FROM observations o
+                WHERE o.route = routes.route
+                  AND o.quality_status = 'accepted'
             ),
             avg_fare = COALESCE((
-                SELECT AVG(o.total_fare) FROM observations o WHERE o.route = routes.route
+                SELECT AVG(o.total_fare)
+                FROM observations o
+                WHERE o.route = routes.route
+                  AND o.quality_status = 'accepted'
             ), avg_fare),
             min_fare = COALESCE((
-                SELECT MIN(o.total_fare) FROM observations o WHERE o.route = routes.route
+                SELECT MIN(o.total_fare)
+                FROM observations o
+                WHERE o.route = routes.route
+                  AND o.quality_status = 'accepted'
             ), min_fare),
             quality = COALESCE((
-                SELECT AVG(o.quality_score) * 100 FROM observations o WHERE o.route = routes.route
+                SELECT AVG(o.quality_score) * 100
+                FROM observations o
+                WHERE o.route = routes.route
+                  AND o.quality_status = 'accepted'
             ), quality)
             """
         )
@@ -422,7 +434,7 @@ class DemoStore:
             fares = [
                 float(row["total_fare"])
                 for row in connection.execute(
-                    "SELECT total_fare FROM observations WHERE route = ? ORDER BY total_fare",
+                    "SELECT total_fare FROM observations WHERE route = ? AND quality_status = 'accepted' ORDER BY total_fare",
                     (route_name,),
                 ).fetchall()
             ]
@@ -436,15 +448,22 @@ class DemoStore:
             """
             UPDATE airlines
             SET observations = (
-                SELECT COUNT(*) FROM observations o WHERE o.carrier_code = airlines.code
+                SELECT COUNT(*)
+                FROM observations o
+                WHERE o.carrier_code = airlines.code
+                  AND o.quality_status = 'accepted'
             ),
             avg_fare = COALESCE((
-                SELECT AVG(o.total_fare) FROM observations o WHERE o.carrier_code = airlines.code
+                SELECT AVG(o.total_fare)
+                FROM observations o
+                WHERE o.carrier_code = airlines.code
+                  AND o.quality_status = 'accepted'
             ), avg_fare),
             quality = COALESCE((
                 SELECT AVG(o.quality_score) * 100
                 FROM observations o
                 WHERE o.carrier_code = airlines.code
+                  AND o.quality_status = 'accepted'
             ), quality)
             """
         )
@@ -454,7 +473,8 @@ class DemoStore:
             count = connection.execute(
                 """
                 SELECT COUNT(*) FROM observations
-                WHERE substr(route, 1, 3) = ? OR substr(route, 5, 3) = ?
+                WHERE (substr(route, 1, 3) = ? OR substr(route, 5, 3) = ?)
+                  AND quality_status = 'accepted'
                 """,
                 (code, code),
             ).fetchone()[0]
