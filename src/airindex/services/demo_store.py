@@ -121,6 +121,8 @@ class DemoStore:
     def __init__(self, db_path: str | None = None) -> None:
         if db_path:
             self.path = Path(db_path)
+        elif os.getenv("AIRINDEX_RUNTIME_DB"):
+            self.path = Path(os.environ["AIRINDEX_RUNTIME_DB"])
         elif os.getenv("VERCEL"):
             self.path = Path("/tmp/airindex_demo.sqlite3")
         else:
@@ -377,14 +379,26 @@ class DemoStore:
             min_fare = COALESCE((
                 SELECT MIN(o.total_fare) FROM observations o WHERE o.route = routes.route
             ), min_fare),
-            p90_fare = COALESCE((
-                SELECT MAX(o.total_fare) FROM observations o WHERE o.route = routes.route
-            ), p90_fare),
             quality = COALESCE((
                 SELECT AVG(o.quality_score) * 100 FROM observations o WHERE o.route = routes.route
             ), quality)
             """
         )
+        route_names = [row["route"] for row in connection.execute("SELECT route FROM routes")]
+        for route_name in route_names:
+            fares = [
+                float(row["total_fare"])
+                for row in connection.execute(
+                    "SELECT total_fare FROM observations WHERE route = ? ORDER BY total_fare",
+                    (route_name,),
+                ).fetchall()
+            ]
+            if fares:
+                p90_index = min(len(fares) - 1, int(round((len(fares) - 1) * 0.90)))
+                connection.execute(
+                    "UPDATE routes SET p90_fare = ? WHERE route = ?",
+                    (fares[p90_index], route_name),
+                )
         connection.execute(
             """
             UPDATE airlines
