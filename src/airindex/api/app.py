@@ -22,7 +22,7 @@ from airindex.analytics.quality_engine import QualityEngineError, assess_observa
 ROOT = Path(__file__).resolve().parents[3]
 DEMO_PATH = ROOT / "data" / "demo" / "index_demo.json"
 REPLAY_PATH = ROOT / "data" / "demo" / "replay_source.json"
-WEB_ROOT = ROOT
+PORTAL_ROOT = ROOT / "portal"
 STATIC_PATH = ROOT / "static"
 
 app = FastAPI(title="AirIndex India API", version="0.5.0")
@@ -106,15 +106,16 @@ def _calculate_demo() -> dict[str, Any]:
 
 
 def _page(name: str) -> FileResponse:
-    path = WEB_ROOT / name / "index.html" if name else WEB_ROOT / "index.html"
+    filename = "home.html" if not name else f"{name}.html"
+    path = PORTAL_ROOT / filename
     if not path.exists():
-        raise HTTPException(status_code=500, detail=f"Website page is missing: {name or 'home'}")
+        raise HTTPException(status_code=500, detail=f"Portal page is missing: {filename}")
     return FileResponse(path)
 
 
 @app.get("/", include_in_schema=False)
 def homepage() -> FileResponse:
-    return _page("")
+    return _page("home")
 
 
 @app.get("/dashboard", include_in_schema=False)
@@ -122,9 +123,19 @@ def dashboard() -> FileResponse:
     return _page("dashboard")
 
 
-@app.get("/explorer", include_in_schema=False)
-def explorer() -> FileResponse:
-    return _page("explorer")
+@app.get("/routes", include_in_schema=False)
+def routes_page() -> FileResponse:
+    return _page("routes")
+
+
+@app.get("/airlines", include_in_schema=False)
+def airlines_page() -> FileResponse:
+    return _page("airlines")
+
+
+@app.get("/airports", include_in_schema=False)
+def airports_page() -> FileResponse:
+    return _page("airports")
 
 
 @app.get("/quality", include_in_schema=False)
@@ -133,13 +144,38 @@ def quality_page() -> FileResponse:
 
 
 @app.get("/methodology", include_in_schema=False)
-def methodology() -> FileResponse:
+def methodology_page() -> FileResponse:
     return _page("methodology")
 
 
+@app.get("/catalogue", include_in_schema=False)
+def catalogue_page() -> FileResponse:
+    return _page("catalogue")
+
+
+@app.get("/releases", include_in_schema=False)
+def releases_page() -> FileResponse:
+    return _page("releases")
+
+
+@app.get("/api", include_in_schema=False)
+def api_portal_page() -> FileResponse:
+    return _page("api")
+
+
+@app.get("/about", include_in_schema=False)
+def about_page() -> FileResponse:
+    return _page("about")
+
+
+@app.get("/explorer", include_in_schema=False)
+def explorer_legacy() -> FileResponse:
+    return _page("routes")
+
+
 @app.get("/pipeline", include_in_schema=False)
-def pipeline() -> FileResponse:
-    return _page("pipeline")
+def pipeline_legacy() -> FileResponse:
+    return _page("api")
 
 
 @app.get("/health")
