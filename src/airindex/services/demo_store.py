@@ -732,6 +732,7 @@ class DemoStore:
         payload["anomaly_rate_pct"] = stats["anomaly_rate_pct"]
         payload["quality_avg"] = stats["quality_avg"]
         payload["duplicate_groups"] = stats["duplicate_groups"]
+        payload["duplicate_count"] = stats["duplicate_groups"]
         payload["distinct_routes"] = stats["route_count"]
         payload["distinct_airports"] = stats["airport_count"]
         payload["distinct_carriers"] = stats["airline_count"]
