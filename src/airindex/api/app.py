@@ -147,6 +147,11 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/api/v1/demo/portal")
+def demo_portal() -> dict[str, Any]:
+    return _read_json(ROOT / "data" / "demo" / "portal_demo.json")
+
+
 @app.get("/api/v1/demo/index")
 def demo_index() -> dict[str, Any]:
     return _calculate_demo()
