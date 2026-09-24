@@ -9,6 +9,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from airindex.analytics.index_engine import (
@@ -21,9 +22,13 @@ from airindex.analytics.quality_engine import QualityEngineError, assess_observa
 ROOT = Path(__file__).resolve().parents[3]
 DEMO_PATH = ROOT / "data" / "demo" / "index_demo.json"
 REPLAY_PATH = ROOT / "data" / "demo" / "replay_source.json"
-DASHBOARD_PATH = ROOT / "demo" / "index-dashboard.html"
+WEB_ROOT = ROOT
+STATIC_PATH = ROOT / "static"
 
-app = FastAPI(title="AirIndex India API", version="0.4.0")
+app = FastAPI(title="AirIndex India API", version="0.5.0")
+
+if STATIC_PATH.exists():
+    app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 
 
 class FareObservationPayload(BaseModel):
@@ -100,11 +105,41 @@ def _calculate_demo() -> dict[str, Any]:
     }
 
 
+def _page(name: str) -> FileResponse:
+    path = WEB_ROOT / name / "index.html" if name else WEB_ROOT / "index.html"
+    if not path.exists():
+        raise HTTPException(status_code=500, detail=f"Website page is missing: {name or 'home'}")
+    return FileResponse(path)
+
+
 @app.get("/", include_in_schema=False)
+def homepage() -> FileResponse:
+    return _page("")
+
+
+@app.get("/dashboard", include_in_schema=False)
 def dashboard() -> FileResponse:
-    if not DASHBOARD_PATH.exists():
-        raise HTTPException(status_code=500, detail="Dashboard file is missing")
-    return FileResponse(DASHBOARD_PATH)
+    return _page("dashboard")
+
+
+@app.get("/explorer", include_in_schema=False)
+def explorer() -> FileResponse:
+    return _page("explorer")
+
+
+@app.get("/quality", include_in_schema=False)
+def quality_page() -> FileResponse:
+    return _page("quality")
+
+
+@app.get("/methodology", include_in_schema=False)
+def methodology() -> FileResponse:
+    return _page("methodology")
+
+
+@app.get("/pipeline", include_in_schema=False)
+def pipeline() -> FileResponse:
+    return _page("pipeline")
 
 
 @app.get("/health")
