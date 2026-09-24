@@ -51,6 +51,9 @@ The current ingest endpoint validates and persists an n8n-compatible batch in th
 
 ## Local demo
 
+Docker is not required for the public portal demo. The API automatically creates a local SQLite demo store, seeds 18,000+ synthetic observations, and persists browser/n8n-shaped ingestion requests locally.
+
+
 ~~~bash
 python -m pip install -e '.[dev]'
 alembic upgrade head
