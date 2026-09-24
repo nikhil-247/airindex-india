@@ -109,3 +109,26 @@ def test_quality_filters_return_real_backend_rows() -> None:
     assert anomalies.status_code == 200
     assert anomalies.json()
     assert all(row["anomaly_flag"] == 1 for row in anomalies.json())
+
+
+def test_vercel_clean_url_entrypoints_exist() -> None:
+    paths = [
+        "index.html",
+        "dashboard/index.html",
+        "routes/index.html",
+        "compare/index.html",
+        "airlines/index.html",
+        "intelligence/index.html",
+        "sources/index.html",
+        "airports/index.html",
+        "quality/index.html",
+        "methodology/index.html",
+        "catalogue/index.html",
+        "releases/index.html",
+        "about/index.html",
+        "explorer/index.html",
+        "pipeline/index.html",
+    ]
+    for path in paths:
+        assert (ROOT / path).exists()
+        assert "portal.css" in (ROOT / path).read_text(encoding="utf-8")
