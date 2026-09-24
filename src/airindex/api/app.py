@@ -212,17 +212,29 @@ def stats_summary() -> dict[str, Any]:
 
 @app.get("/api/v1/stats/routes")
 def stats_routes(search: str | None = None) -> list[dict[str, Any]]:
-    return demo_store.all_rows("routes", search=search)
+    rows = demo_store.portal_payload()["routes"]
+    if search:
+        query = search.upper()
+        rows = [row for row in rows if query in row["route"]]
+    return rows
 
 
 @app.get("/api/v1/stats/airlines")
 def stats_airlines(search: str | None = None) -> list[dict[str, Any]]:
-    return demo_store.all_rows("airlines", search=search)
+    rows = demo_store.portal_payload()["airlines"]
+    if search:
+        query = search.lower()
+        rows = [
+            row
+            for row in rows
+            if query in row["name"].lower() or query.upper() == row["code"]
+        ]
+    return rows
 
 
 @app.get("/api/v1/stats/airports")
 def stats_airports() -> list[dict[str, Any]]:
-    return demo_store.all_rows("airports")
+    return demo_store.portal_payload()["airports"]
 
 
 @app.get("/api/v1/stats/sources")
