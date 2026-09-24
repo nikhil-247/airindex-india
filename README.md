@@ -12,6 +12,9 @@ The public-facing website is structured as a government-style statistical inform
 
 The rich demonstration dataset includes a 30-day national index series, 12 route indicators, 7 carrier indicators, 10 airport indicators, booking-horizon measures, regional summaries, a source registry, release archive and data catalogue. The replay layer is intentionally separate from future authorized live connectors.
 
+The public portal is now backed by a deterministic SQLite demo store. On first startup it seeds 18,000 synthetic fare observations plus source, release, alert, route, airline and airport tables. The browser ingestion console writes new observations into this local store and the website reads aggregate statistics back through FastAPI endpoints. Set `AIRINDEX_RUNTIME_DB` to move the demo store elsewhere. On Vercel, the demo store uses `/tmp` and is therefore not durable production storage.
+
+
 
 The repository now includes a multi-page product website with Home, Dashboard, Route Explorer, Quality & Audit, Methodology, Pipeline controls and FastAPI docs. All pages use the same-origin API and the committed replay dataset for a deterministic demo.
 
@@ -31,10 +34,20 @@ GET  /health
 GET  /api/v1/demo/index
 GET  /api/v1/demo/quality
 GET  /api/v1/demo/overview
+GET  /api/v1/demo/portal
+GET  /api/v1/stats/summary
+GET  /api/v1/stats/routes
+GET  /api/v1/stats/airlines
+GET  /api/v1/stats/airports
+GET  /api/v1/stats/sources
+GET  /api/v1/stats/releases
+GET  /api/v1/stats/alerts
+GET  /api/v1/stats/series
+GET  /api/v1/stats/observations
 POST /api/v1/ingest/fare-observations
 ~~~
 
-The current ingest endpoint validates an n8n-compatible batch for the prototype and returns an acceptance count. It does not claim durable persistence.
+The current ingest endpoint validates and persists an n8n-compatible batch in the local SQLite demo store. It is real local demo persistence, not durable production persistence.
 
 ## Local demo
 
