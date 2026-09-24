@@ -51,6 +51,8 @@ def test_rich_portal_demo_dataset_is_available() -> None:
     assert len(payload["fare_distribution"]) >= 5
     assert len(payload["volatility"]) >= 5
     assert len(payload["alerts"]) >= 4
+    assert payload["rejected_count"] >= 40
+    assert payload["anomaly_count"] >= 300
     assert any("MoSPI" in row["name"] for row in payload["source_registry"])
 
 
@@ -91,3 +93,19 @@ def test_ingest_persists_demo_observation() -> None:
     assert after == before + 1
     after_index = client.get("/api/v1/stats/summary").json()["national_index"]
     assert after_index > before_index
+
+
+def test_quality_filters_return_real_backend_rows() -> None:
+    rejected = client.get(
+        "/api/v1/stats/observations?status=rejected&limit=5"
+    )
+    assert rejected.status_code == 200
+    assert rejected.json()
+    assert all(row["quality_status"] == "rejected" for row in rejected.json())
+
+    anomalies = client.get(
+        "/api/v1/stats/observations?anomaly=true&limit=5"
+    )
+    assert anomalies.status_code == 200
+    assert anomalies.json()
+    assert all(row["anomaly_flag"] == 1 for row in anomalies.json())
