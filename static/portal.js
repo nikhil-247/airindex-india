@@ -5,7 +5,7 @@ const Portal={
   pct(v){return (Number(v)>=0?"+":"")+Number(v||0).toFixed(2)+"%"},
   async data(){if(!this.cache)this.cache=await fetch("/api/v1/demo/portal",{cache:"no-store"}).then(r=>{if(!r.ok)throw new Error("Portal API "+r.status);return r.json()});return this.cache},
   navItems:[
-    ["/","Home"],["/dashboard","Market Dashboard"],["/intelligence","Market Intelligence"],["/compare","Compare"],["/demo","Live Demo"],["/routes","Routes"],["/airlines","Airlines"],["/airports","Airports"],["/quality","Data Quality"],["/methodology","Methodology"],["/catalogue","Data Catalogue"],["/releases","Releases"],["/api","API & Downloads"]
+    ["/","Home"],["/dashboard","Market Dashboard"],["/intelligence","Market Intelligence"],["/compare","Compare"],["/demo","Live Demo"],["/routes","Routes"],["/airlines","Airlines"],["/airports","Airports"],["/quality","Data Quality"],["/methodology","Methodology"],["/catalogue","Data Catalogue"],["/releases","Releases"],["/api-console","API & Downloads"]
   ],
   header(active){
     const nav=this.navItems.map(([href,label])=>'<a class="navitem '+(href===active?"active":"")+'" href="'+href+'">'+label+"</a>").join("");
