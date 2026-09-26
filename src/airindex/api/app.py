@@ -185,6 +185,11 @@ def api_portal_page() -> FileResponse:
     return _page("api")
 
 
+@app.get("/api-console", include_in_schema=False)
+def api_console_page() -> FileResponse:
+    return _page("api")
+
+
 @app.get("/about", include_in_schema=False)
 def about_page() -> FileResponse:
     return _page("about")
