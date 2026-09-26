@@ -135,3 +135,26 @@ def test_vercel_clean_url_entrypoints_exist() -> None:
     for path in paths:
         assert (ROOT / path).exists()
         assert "portal.css" in (ROOT / path).read_text(encoding="utf-8")
+
+
+def test_demo_reset_restores_seed_state() -> None:
+    before = client.get("/api/v1/stats/summary").json()["initial_observation_count"]
+    client.post(
+        "/api/v1/ingest/fare-observations",
+        json={
+            "observations": [
+                {
+                    "route": "DEL-BOM",
+                    "observed_at": "2026-09-26T10:00:00Z",
+                    "travel_date": "2026-10-10",
+                    "carrier_code": "6E",
+                    "total_fare": 25000,
+                    "advance_days": 14,
+                    "source": "reset-test",
+                }
+            ]
+        },
+    )
+    response = client.post("/api/v1/demo/reset")
+    assert response.status_code == 200
+    assert response.json()["summary"]["observation_count"] == before
