@@ -130,6 +130,7 @@ def test_vercel_clean_url_entrypoints_exist() -> None:
         "about/index.html",
         "explorer/index.html",
         "pipeline/index.html",
+        "api-console/index.html",
     ]
     for path in paths:
         assert (ROOT / path).exists()
