@@ -220,6 +220,9 @@ def stats_summary() -> dict[str, Any]:
     return demo_store.summary()
 
 
+@app.post("/api/v1/demo/reset")
+def demo_reset() -> dict[str, Any]:
+    return {"status": "demo_reset", "summary": demo_store.reset()}
 @app.get("/api/v1/stats/routes")
 def stats_routes(search: str | None = None) -> list[dict[str, Any]]:
     rows = demo_store.portal_payload()["routes"]
