@@ -16,9 +16,6 @@ The public portal is now backed by a deterministic SQLite demo store. On first s
 
 
 
-The repository now includes a multi-page product website with Home, Dashboard, Route Explorer, Quality & Audit, Methodology, Pipeline controls and FastAPI docs. All pages use the same-origin API and the committed replay dataset for a deterministic demo.
-
-
 - Deterministic Jévons elementary-index calculation with fixed route weights.
 - PostgreSQL schema and Alembic migration foundations for observations, routes, sources, baskets and index runs.
 - FastAPI endpoints for the replay index and a deterministic data-quality audit.
@@ -56,9 +53,10 @@ Docker is not required for the public portal demo. The API automatically creates
 
 ~~~bash
 python -m pip install -e '.[dev]'
-alembic upgrade head
-uvicorn airindex.api.app:app --reload
+$env:PYTHONPATH="$PWD/src"
+python -m uvicorn airindex.api.app:app --reload
 ~~~
+The public demo creates its SQLite store automatically. PostgreSQL + Alembic remain the production/integration database path and can be exercised separately when Docker is available.
 
 Open http://127.0.0.1:8000/.
 
