@@ -573,6 +573,12 @@ class DemoStore:
             return 100.0
         return sum(float(row["weight"]) * float(row["index"]) for row in routes) / weight_total
 
+    def reset(self) -> dict[str, Any]:
+        if self.path.exists():
+            self.path.unlink()
+        self.ensure_seeded()
+        return self.summary()
+
     def summary(self) -> dict[str, Any]:
         self.ensure_seeded()
         with self._connect() as c:
