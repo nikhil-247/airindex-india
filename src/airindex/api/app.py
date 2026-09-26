@@ -9,6 +9,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from airindex.analytics.index_engine import (
@@ -17,13 +18,19 @@ from airindex.analytics.index_engine import (
     calculate_jevons_index,
 )
 from airindex.analytics.quality_engine import QualityEngineError, assess_observations
+from airindex.services.demo_store import DemoStore
 
 ROOT = Path(__file__).resolve().parents[3]
 DEMO_PATH = ROOT / "data" / "demo" / "index_demo.json"
 REPLAY_PATH = ROOT / "data" / "demo" / "replay_source.json"
-DASHBOARD_PATH = ROOT / "demo" / "index-dashboard.html"
+PORTAL_ROOT = ROOT / "portal"
+STATIC_PATH = ROOT / "static"
 
-app = FastAPI(title="AirIndex India API", version="0.4.0")
+app = FastAPI(title="AirIndex India API", version="0.7.0")
+demo_store = DemoStore()
+
+if STATIC_PATH.exists():
+    app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 
 
 class FareObservationPayload(BaseModel):
@@ -100,16 +107,181 @@ def _calculate_demo() -> dict[str, Any]:
     }
 
 
+def _page(name: str) -> FileResponse:
+    filename = "home.html" if not name else f"{name}.html"
+    path = PORTAL_ROOT / filename
+    if not path.exists():
+        raise HTTPException(status_code=500, detail=f"Portal page is missing: {filename}")
+    return FileResponse(path)
+
+
 @app.get("/", include_in_schema=False)
+def homepage() -> FileResponse:
+    return _page("home")
+
+
+@app.get("/dashboard", include_in_schema=False)
 def dashboard() -> FileResponse:
-    if not DASHBOARD_PATH.exists():
-        raise HTTPException(status_code=500, detail="Dashboard file is missing")
-    return FileResponse(DASHBOARD_PATH)
+    return _page("dashboard")
+
+
+@app.get("/routes", include_in_schema=False)
+def routes_page() -> FileResponse:
+    return _page("routes")
+
+
+@app.get("/compare", include_in_schema=False)
+def compare_page() -> FileResponse:
+    return _page("compare")
+
+
+@app.get("/airlines", include_in_schema=False)
+def airlines_page() -> FileResponse:
+    return _page("airlines")
+
+
+@app.get("/intelligence", include_in_schema=False)
+def intelligence_page() -> FileResponse:
+    return _page("intelligence")
+
+
+@app.get("/demo", include_in_schema=False)
+def live_demo_page() -> FileResponse:
+    return _page("demo")
+
+
+@app.get("/sources", include_in_schema=False)
+def sources_page() -> FileResponse:
+    return _page("sources")
+
+
+@app.get("/airports", include_in_schema=False)
+def airports_page() -> FileResponse:
+    return _page("airports")
+
+
+@app.get("/quality", include_in_schema=False)
+def quality_page() -> FileResponse:
+    return _page("quality")
+
+
+@app.get("/methodology", include_in_schema=False)
+def methodology_page() -> FileResponse:
+    return _page("methodology")
+
+
+@app.get("/catalogue", include_in_schema=False)
+def catalogue_page() -> FileResponse:
+    return _page("catalogue")
+
+
+@app.get("/releases", include_in_schema=False)
+def releases_page() -> FileResponse:
+    return _page("releases")
+
+
+@app.get("/api", include_in_schema=False)
+def api_portal_page() -> FileResponse:
+    return _page("api")
+
+
+@app.get("/api-console", include_in_schema=False)
+def api_console_page() -> FileResponse:
+    return _page("api")
+
+
+@app.get("/about", include_in_schema=False)
+def about_page() -> FileResponse:
+    return _page("about")
+
+
+@app.get("/explorer", include_in_schema=False)
+def explorer_legacy() -> FileResponse:
+    return _page("routes")
+
+
+@app.get("/pipeline", include_in_schema=False)
+def pipeline_legacy() -> FileResponse:
+    return _page("api")
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/v1/demo/portal")
+def demo_portal() -> dict[str, Any]:
+    return demo_store.portal_payload()
+
+
+@app.get("/api/v1/stats/summary")
+def stats_summary() -> dict[str, Any]:
+    return demo_store.summary()
+
+
+@app.get("/api/v1/stats/routes")
+def stats_routes(search: str | None = None) -> list[dict[str, Any]]:
+    rows = demo_store.portal_payload()["routes"]
+    if search:
+        query = search.upper()
+        rows = [row for row in rows if query in row["route"]]
+    return rows
+
+
+@app.get("/api/v1/stats/airlines")
+def stats_airlines(search: str | None = None) -> list[dict[str, Any]]:
+    rows = demo_store.portal_payload()["airlines"]
+    if search:
+        query = search.lower()
+        rows = [
+            row
+            for row in rows
+            if query in row["name"].lower() or query.upper() == row["code"]
+        ]
+    return rows
+
+
+@app.get("/api/v1/stats/airports")
+def stats_airports() -> list[dict[str, Any]]:
+    return demo_store.portal_payload()["airports"]
+
+
+@app.get("/api/v1/stats/sources")
+def stats_sources() -> list[dict[str, Any]]:
+    return demo_store.all_rows("sources")
+
+
+@app.get("/api/v1/stats/releases")
+def stats_releases() -> list[dict[str, Any]]:
+    return demo_store.all_rows("releases")
+
+
+@app.get("/api/v1/stats/alerts")
+def stats_alerts() -> list[dict[str, Any]]:
+    return demo_store.all_rows("alerts")
+
+
+@app.get("/api/v1/stats/series")
+def stats_series() -> list[dict[str, Any]]:
+    return demo_store.all_rows("daily_index")
+
+
+@app.get("/api/v1/stats/observations")
+def stats_observations(
+    route: str | None = None,
+    carrier: str | None = None,
+    status: str | None = None,
+    anomaly: bool | None = None,
+    limit: int = 100,
+) -> list[dict[str, Any]]:
+    return demo_store.observation_detail(
+        route=route,
+        carrier=carrier,
+        status=status,
+        anomaly=anomaly,
+        limit=limit,
+    )
 
 
 @app.get("/api/v1/demo/index")
@@ -158,8 +330,27 @@ def demo_overview() -> dict[str, Any]:
 
 @app.post("/api/v1/ingest/fare-observations")
 def ingest_fare_observations(request: IngestRequest) -> dict[str, int | str]:
-    """Validate an n8n-compatible observation batch without claiming persistence."""
+    """Validate and persist an n8n-compatible batch in the local demo store."""
+    try:
+        inserted = demo_store.add_observations(
+            [
+                {
+                    "route": item.route,
+                    "observed_at": item.observed_at,
+                    "travel_date": item.travel_date,
+                    "carrier_code": item.carrier_code,
+                    "total_fare": item.total_fare,
+                    "advance_days": item.advance_days,
+                    "source": item.source,
+                }
+                for item in request.observations
+            ]
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {
-        "status": "accepted_for_demo_pipeline",
+        "status": "accepted_and_persisted_for_demo",
         "observation_count": len(request.observations),
+        "persisted_count": inserted,
+        "storage": "sqlite_demo_store",
     }
