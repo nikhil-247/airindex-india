@@ -145,6 +145,11 @@ def intelligence_page() -> FileResponse:
     return _page("intelligence")
 
 
+@app.get("/demo", include_in_schema=False)
+def live_demo_page() -> FileResponse:
+    return _page("demo")
+
+
 @app.get("/sources", include_in_schema=False)
 def sources_page() -> FileResponse:
     return _page("sources")
